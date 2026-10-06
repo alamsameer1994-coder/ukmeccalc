@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UKMEC 2025 Calculator</title>
+<style>
+  :root{
+    --paper:#f2f0ea;
+    --ink:#1f2a24;
+    --ink-soft:#4a5751;
+    --line: #d8d3c4;
+    --card: #fbfaf6;
+    --navy:#233b3a;
+    --teal:#3c6e64;
+    --teal-deep:#25453f;
+    --c1:#5c8a63; --c1-bg:#e6efdf;
+    --c2:#b8862c; --c2-bg:#f6ecd2;
+    --c3:#c1622a; --c3-bg:#f8e2cf;
+    --c4:#a33d34; --c4-bg:#f4dad7;
+    --cna:#8a8a86; --cna-bg:#eae8e0;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family: "Iowan Old Style","Georgia","Charter",serif;
+    line-height:1.45;
+    -webkit-font-smoothing:antialiased;
+  }
+  .sans{font-family:"Avenir Next","Helvetica Neue",Arial,sans-serif;}
+  .wrap{max-width:980px;margin:0 auto;padding:20px 18px 90px;}
+
+  header.top{
+    display:flex; flex-direction:column; gap:6px;
+    padding-bottom:16px; border-bottom:2px solid var(--navy);
+    margin-bottom:18px;
+  }
+  .eyebrow{
+    font-family:"Avenir Next","Helvetica Neue",Arial,sans-serif;
+    text-transform:uppercase; letter-spacing:.14em; font-size:11px;
+    color:var(--teal-deep); font-weight:700;
+  }
+  h1{font-size:28px; margin:2px 0 2px; font-weight:600; letter-spacing:-.01em; color:var(--navy);}
+  .subtitle{font-family:"Avenir Next","Helvetica Neue",Arial,sans-serif; font-size:13.5px; color:var(--ink-soft); max-width:640px;}
+
+  .disclaimer{
+    font-family:"Avenir Next","Helvetica Neue",Arial,sans-serif;
+    font-size:12.5px; color:var(--ink-soft); background:#eae6d6; border:1px solid var(--line);
+    border-radius:8px; padding:10px 13px; margin-bottom:20px; line-height:1.5;
+  }
+  .disclaimer b{color:var(--navy);}
+  .disclaimer a{color:var(--teal-deep);}
+
+  /* Results dock */
+  .dock{
+    position:sticky; top:0; z-index:20;
+    background:var(--paper);
+    padding:12px 0 14px;
+    border-bottom:1px solid var(--line);
+    margin-bottom:20px;
+  }
+  .dock-inner{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; box-shadow:0 2px 10px rgba(35,59,58,.06);}
+  .dock-head{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:10px; font-family:"Avenir Next","Helvetica Neue",Arial,sans-serif;}
+  .dock-head .lbl{font-size:11px; text-transform:uppercase; letter-spacing:.1em; color:var(--ink-soft); font-weight:700;}
+  .dock-head .count{font-size:11.5px; color:var(--ink-soft);}
+  .method-grid{
+    display:grid; grid-template-columns:repeat(6,1fr); gap:8px;
+    font-family:"Avenir Next","Helvetica Neue",Arial,sans-serif;
+  }
+  .method-cell{border-radius:9px; padding:8px 4px 9px; text-align:center; background:var(--cna-bg); border:1px solid rgba(0,0,0,.05);}
+  .method-cell .m-name{font-size:10.5px; font-weight:700; color:var(--navy); letter-spacing:.01em;}
+  .method-cell .m-cats{display:flex; justify-content:center; gap:4px; margin-top:5px;}
+  .badge{
+    min-width:24px; height:24px; border-radius:6px; display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-size:13px; color:#fff;
+  }
+  .badge.c1{background:var(--c1);} .badge.c2{background:var(--c2);}
+  .badge.c3{background:var(--c3);} .badge.c4{background:var(--c4);}
+  .badge.cna{background:var(--cna); font-size:9.5px;}
+  .ic-tag{font-size:8.5px; color:var(--ink-soft); margin-top:2px; letter-spacing:.03em;}
+  @media (max-width:640px){
+    .method-grid{grid-template-columns:repeat(3,1fr); row-gap:10px;}
+  }
+
+  .legend{display:flex; flex-wrap:wrap; gap:10px 16px; margin-top:11px; font-family:"Avenir Next","Helvetica Neue",Arial,sans-serif; font-size:11px; color:var(--ink-soft);}
+  .legend span{display:inline-flex; align-items:center; gap:5px;}
+  .legend i{width:10px; height:10px; border-radius:3px; display:inline-block;}
+
+  /* Profile card */
+  .card{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px 18px; margin-bottom:18px;}
+  .card h2{font-size:15px; margin:0 0 12px; color:var(--navy); font-weight:700;}
+  .profile-grid{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; font-family:"Avenir Next","Helvetica Neue",Arial,sans-serif;}
+  @media (max-width:640px){.profile-grid{grid-template-columns:1fr;}}
+  .field label{display:block; font-size:11.5px; font-weight:700; color:var(--ink-soft); margin-bottom:5px; text-transform:uppercase; letter-spacing:.06em;}
+  .field input, .field select{
+    width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:7px; background:#fff;
+    font-family:"Avenir Next","Helvetica Neue",Arial,sans-serif; font-size:14px; color:var(--ink);
+  }
+  .field input:focus, .field select:focus{outline:2px solid var(--teal); outline-offset:1px;}
+  .field .hint{font-size:11px; color:var(--ink-soft); margin-top:4px;}
+
+  /* Search */
+  .search-row{display:flex; gap:8px; margin-bottom:14px;}
+  .search-row input{
+    flex:1; padding:10px 13px; border:1px solid var(--line); border-radius:9px; background:#fff;
+    font-family:"Avenir Next","Helvetica Neue",Arial,sans-serif; font-size:14.5px; color:var(--ink);
+  }
+  .search-row input:focus{outline:2px solid var(--teal); outline-offset:1px;}
+
+  /* Sections / accordion */
+  .section{border:1px solid var(--line); border-radius:12px; margin-bottom:10px; background:var(--card); overflow:hidden;}
+  .section-head{
+    display:flex; align-items:center; justify-content:space-between; cursor:pointer;
+    padding:12px 16px; font-family:"Avenir Next","Helvetica Neue",Arial,sans-serif;
+    font-weight:700; font-size:13.5px; color:var(--navy); user-select:none;
+  }
+  .section-head:hover{background:#f2efe4;}
+  .section-head .chev{transition:transform .15s ease; color:var(--teal-deep); font-size:12px;}
+  .section-head.open .chev{transform:rotate(90deg);}
+  .section-body{padding:2px 14px 12px; display:none;}
+  .section-body.open{display:block;}
+
+  .item{border-top:1px solid var(--line); padding:10px 2px;}
+  .item:first-child{border-top:none;}
+  .item-row{display:flex; align-items:flex-start; gap:10px;}
+  .item-row input[type=checkbox]{margin-top:3px; width:16px; height:16px; accent-color:var(--teal-deep); flex-shrink:0;}
+  .item-label{font-size:14.5px; color:var(--ink); cursor:pointer; flex:1;}
+  .item-note{font-family:"Avenir Next","Helvetica Neue",Arial,sans-serif; font-size:12px; color:var(--ink-soft); margin:5px 0 0 26px; line-height:1.5;}
+  .sub-select{margin:8px 0 0 26px; font-family:"Avenir Next","Helvetica Neue",Arial,sans-serif;}
+  .sub-select select{
+    width:100%; max-width:420px; padding:7px 10px; border:1px solid var(--line); border-radius:7px;
+    background:#fff; font-size:13.5px; color:var(--ink);
+  }
+  .textonly{font-family:"Avenir Next","Helvetica Neue",Arial,sans-serif; font-size:12.5px; color:var(--ink-soft); margin-left:26px; line-height:1.55;}
+
+  /* Selected list */
+  .selected-wrap{margin-bottom:18px;}
+  .chips{display:flex; flex-wrap:wrap; gap:7px; font-family:"Avenir Next","Helvetica Neue",Arial,sans-serif;}
+  .chip{
+    display:flex; align-items:center; gap:6px; background:var(--teal-deep); color:#fff;
+    padding:5px 10px 5px 12px; border-radius:999px; font-size:12.5px;
+  }
+  .chip button{background:none; border:none; color:#fff; opacity:.75; cursor:pointer; font-size:14px; line-height:1; padding:0;}
+  .chip button:hover{opacity:1;}
+  .empty-note{font-family:"Avenir Next","Helvetica Neue",Arial,sans-serif; font-size:12.5px; color:var(--ink-soft); font-style:italic;}
+
+  .cumulative-warn{
+    font-family:"Avenir Next","Helvetica Neue",Arial,sans-serif; font-size:12px; color:#7a4a12;
+    background:#f6ecd2; border:1px solid #e3cb92; border-radius:8px; padding:9px 12px; margin-top:10px; line-height:1.5;
+  }
+  .cumulative-warn.severe{color:#7a271f; background:#f4dad7; border-color:#e0b3ac;}
+
+  footer{font-family:"Avenir Next","Helvetica Neue",Arial,sans-serif; font-size:11.5px; color:var(--ink-soft); text-align:center; margin-top:28px; padding-top:16px; border-top:1px solid var(--line);}
+  footer a{color:var(--teal-deep);}
+
+  ::selection{background:#cfe0d3;}
+
+  /* Methods key */
+  .methods-key-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:4px 2px 10px;}
+  @media (max-width:700px){ .methods-key-grid{grid-template-columns:1fr;} }
+  .method-card{border:1px solid var(--line); border-radius:10px; padding:12px 14px; background:#fdfcf9;}
+  .method-card .mc-top{display:flex; align-items:baseline; gap:8px; margin-bottom:6px;}
+  .method-card .mc-abbr{font-family:"Avenir Next","Helvetica Neue",Arial,sans-serif; font-weight:800; font-size:14px; color:#fff; background:var(--teal-deep); border-radius:5px; padding:2px 7px;}
+  .method-card .mc-full{font-family:"Avenir Next","Helvetica Neue",Arial,sans-serif; font-weight:700; font-size:13.5px; color:var(--navy);}
+  .method-card .mc-desc{font-size:13.5px; color:var(--ink); line-height:1.5; margin-bottom:6px;}
+  .method-card .mc-meta{font-family:"Avenir Next","Helvetica Neue",Arial,sans-serif; font-size:11.5px; color:var(--ink-soft); display:flex; flex-wrap:wrap; gap:4px 14px; border-top:1px dashed var(--line); padding-top:7px;}
+  .method-card .mc-meta b{color:var(--ink-soft);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <span class="eyebrow">CoSRH · UKMEC 2025</span>
+    <h1>UK Medical Eligibility Criteria calculator</h1>
+    <div class="subtitle sans">Select a person's characteristics and conditions below to see the eligibility category (1–4) for each contraceptive method, per the UKMEC 2025 summary tables.</div>
+  </header>
+
+  <div class="disclaimer sans">
+    <b>For clinical reference only.</b> This tool mirrors the CoSRH UKMEC 2025 summary tables but does not replace clinical judgement, the full UKMEC guidance, or specialist referral — especially where category 3/4 or multiple risk factors apply. Always verify against the <a href="https://www.cosrh.org/Common/Uploaded%20files/documents/UKMEC_2025_Summary_Tables.pdf" target="_blank" rel="noopener">source document</a>. Category 3–4 conditions, complex combinations, and anything not listed here should be discussed with a specialist contraceptive provider.
+  </div>
+
+  <div class="dock">
+    <div class="dock-inner">
+      <div class="dock-head">
+        <span class="lbl">Eligibility result</span>
+        <span class="count" id="selCount">0 factors selected</span>
+      </div>
+      <div class="method-grid" id="methodGrid"></div>
+      <div class="legend">
+        <span><i style="background:var(--c1)"></i>1 — no restriction</span>
+        <span><i style="background:var(--c2)"></i>2 — benefits generally outweigh risks</span>
+        <span><i style="background:var(--c3)"></i>3 — risks usually outweigh benefits</span>
+        <span><i style="background:var(--c4)"></i>4 — unacceptable risk</span>
+        <span><i style="background:var(--cna)"></i>N/A or judgement</span>
+      </div>
+      <div id="cumulativeWarnings"></div>
+    </div>
+  </div>
+
+  <div class="section" id="methodsKeySection">
+    <div class="section-head open" id="methodsKeyHead"><span>Methods key — what each abbreviation means</span><span class="chev">▶</span></div>
+    <div class="section-body open" id="methodsKeyBody">
+      <div class="methods-key-grid" id="methodsKeyGrid"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Profile</h2>
+    <div class="profile-grid">
+      <div class="field">
+        <label for="ageInput">Age (years)</label>
+        <input type="number" id="ageInput" min="9" max="70" placeholder="e.g. 28">
+        <div class="hint">Drives age-based Cu-IUD, LNG-IUD, DMPA and CHC categories.</div>
+      </div>
+      <div class="field">
+        <label for="bmiInput">BMI (kg/m²)</label>
+        <input type="number" id="bmiInput" min="10" max="80" step="0.1" placeholder="e.g. 32">
+        <div class="hint">Drives obesity-related category for DMPA and CHC.</div>
+      </div>
+      <div class="field">
+        <label for="smokeInput">Smoking status</label>
+        <select id="smokeInput">
+          <option value="none">Never smoked / not applicable</option>
+          <option value="lt35">Current smoker, age &lt;35</option>
+          <option value="ge35_lt15">Current smoker, age ≥35, &lt;15/day</option>
+          <option value="ge35_ge15">Current smoker, age ≥35, ≥15/day</option>
+          <option value="stopped_lt1">Stopped &lt;1 year ago (age ≥35)</option>
+          <option value="stopped_ge1">Stopped ≥1 year ago (age ≥35)</option>
+        </select>
+        <div class="hint">Affects CHC category only.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="selected-wrap">
+    <div class="card" style="margin-bottom:0;">
+      <h2>Selected conditions</h2>
+      <div class="chips" id="chipsWrap"></div>
+      <div class="empty-note" id="emptyNote">No conditions selected yet — add profile details above, or tick conditions below.</div>
+    </div>
+  </div>
+
+  <div class="search-row">
+    <input type="text" id="searchBox" placeholder="Search conditions (e.g. migraine, VTE, breastfeeding, HIV)…" class="sans">
+  </div>
+
+  <div id="sections"></div>
+
+  <footer>
+    © 2026 Sameer Alam.<br>
+    Built from the CoSRH UKMEC 2025 Summary Tables (© College of Sexual and Reproductive Healthcare, 2006–2025). Source: <a href="https://www.cosrh.org/Common/Uploaded%20files/documents/UKMEC_2025_Summary_Tables.pdf" target="_blank" rel="noopener">cosrh.org</a><br>
+    Version 1.0 · Last updated July 2026 · <a href="mailto:alam.sameer1994@gmail.com?subject=UKMEC%20Calculator%20feedback">Report an issue or suggest a correction</a>
+  </footer>
+</div>
+
+<script>
+const METHODS = ["Cu-IUD","LNG-IUD","IMP","DMPA","POP","CHC"];
+
+const METHOD_INFO = {
+  "Cu-IUD": {
+    full: "Copper intrauterine device",
+    desc: "A small T-shaped plastic-and-copper device fitted in the uterus. Copper ions are toxic to sperm and eggs, preventing fertilisation; it also works as the most effective form of emergency contraception if fitted within 5 days.",
+    duration: "5–10 years (device-dependent)", hormonal:"No", user_action:"None once fitted", fertility:"Returns immediately on removal",
+  },
+  "LNG-IUD": {
+    full: "Levonorgestrel intrauterine system (hormonal coil)",
+    desc: "A T-shaped device that releases the progestogen levonorgestrel directly into the uterus, thickening cervical mucus and thinning the womb lining; often also used to treat heavy menstrual bleeding.",
+    duration: "3–8 years (device-dependent)", hormonal:"Yes — progestogen-only, local", user_action:"None once fitted", fertility:"Returns immediately on removal",
+  },
+  "IMP": {
+    full: "Progestogen-only implant",
+    desc: "A small flexible rod inserted under the skin of the upper arm, releasing etonogestrel to suppress ovulation and thicken cervical mucus.",
+    duration: "3 years", hormonal:"Yes — progestogen-only", user_action:"None once fitted", fertility:"Returns quickly on removal",
+  },
+  "DMPA": {
+    full: "Depot medroxyprogesterone acetate (contraceptive injection)",
+    desc: "An injectable progestogen given every 8–13 weeks (intramuscular or subcutaneous) that primarily works by suppressing ovulation.",
+    duration: "8–13 weeks per dose", hormonal:"Yes — progestogen-only", user_action:"Repeat injection on schedule", fertility:"May take several months to return after stopping",
+  },
+  "POP": {
+    full: "Progestogen-only pill (\"mini-pill\")",
+    desc: "A daily oral pill containing progestogen only. Traditional POPs thicken cervical mucus; desogestrel-type POPs also usually suppress ovulation, and are taken with no pill-free interval.",
+    duration: "Daily, ongoing", hormonal:"Yes — progestogen-only", user_action:"Daily pill", fertility:"Returns quickly on stopping",
+  },
+  "CHC": {
+    full: "Combined hormonal contraception (pill, patch or vaginal ring)",
+    desc: "Contains both oestrogen and a progestogen. Available as a daily pill, a weekly patch, or a vaginal ring; works mainly by suppressing ovulation. This is the method category most affected by cardiovascular/VTE risk factors.",
+    duration: "Daily (pill), weekly (patch) or monthly (ring)", hormonal:"Yes — oestrogen + progestogen", user_action:"Regular self-administration", fertility:"Returns quickly on stopping",
+  },
+};
+
+// value helpers: number = category; {i,c} = split initiation/continuation; "NA" = not applicable; null = no data (excluded from calc)
+function V(a,b,c,d,e,f){ return [a,b,c,d,e,f]; }
+
+// ---- Condition dataset (grouped by section) ----
+// each condition: {id, label, note, options:[{label, values:[6]}]}
+const DATA = [
+{section:"Reproductive history", items:[
+  {id:"pp-iud-timing", label:"Postpartum IUD insertion timing", note:"Applies to Cu-IUD / LNG-IUD only; other methods unaffected by insertion timing.",
+    options:[
+      {label:"0–48 hours postpartum", values:V(1,1,1,1,1,1)},
+      {label:"48 hours to 4 weeks postpartum", values:V(3,3,1,1,1,1)},
+      {label:"≥4 weeks postpartum", values:V(1,1,1,1,1,1)},
+      {label:"Postpartum sepsis", values:V(4,4,1,1,1,1)},
+    ]},
+  {id:"pp-hormonal", label:"Postpartum (hormonal methods) — weeks since birth & VTE risk factors", note:"Applies to IMP / DMPA / POP / CHC; Cu-IUD & LNG-IUD governed by insertion-timing item above.",
+    options:[
+      {label:"0–<3 weeks, with other VTE risk factors", values:V(1,1,1,3,1,4)},
+      {label:"0–<3 weeks, without other VTE risk factors", values:V(1,1,1,2,1,3)},
+      {label:"3–<6 weeks, with other VTE risk factors", values:V(1,1,1,3,1,3)},
+      {label:"3–<6 weeks, without other VTE risk factors", values:V(1,1,1,1,1,2)},
+      {label:"≥6 weeks postpartum", values:V(1,1,1,1,1,1)},
+    ]},
+  {id:"breastfeeding", label:"Breastfeeding", note:"Applies to IMP / DMPA / POP / CHC; IUD categories unaffected by breastfeeding status.",
+    options:[
+      {label:"0–<6 weeks postpartum", values:V(1,1,1,2,1,4)},
+      {label:"≥6 weeks to <6 months (primarily breastfeeding)", values:V(1,1,1,1,1,2)},
+      {label:"≥6 months postpartum", values:V(1,1,1,1,1,1)},
+    ]},
+  {id:"post-abortion", label:"Post-abortion", options:[
+      {label:"First trimester", values:V(1,1,1,1,1,1)},
+      {label:"Second trimester", values:V(2,2,1,1,1,1)},
+      {label:"Post-abortion sepsis", values:V(4,4,1,1,1,1)},
+  ]},
+  {id:"ectopic", label:"Past ectopic pregnancy", options:[{label:null, values:V(1,1,1,1,1,1)}]},
+  {id:"pelvic-surgery", label:"History of pelvic surgery", options:[{label:null, values:V(1,1,1,1,1,1)}]},
+  {id:"bariatric", label:"History of bariatric surgery", options:[
+      {label:"Current BMI <30 kg/m²", values:V(1,1,1,1,1,1)},
+      {label:"Current BMI 30–34.9 kg/m²", values:V(1,1,1,1,1,2)},
+      {label:"Current BMI ≥35 kg/m²", values:V(1,1,1,2,1,3)},
+  ]},
+  {id:"transplant", label:"Organ transplant", options:[
+      {label:"Complicated (graft failure, rejection, cardiac allograft vasculopathy)", values:[{i:3,c:2},{i:3,c:2},2,2,2,3]},
+      {label:"Uncomplicated", values:V(2,2,2,2,2,2)},
+  ]},
+]},
+{section:"Cardiovascular disease & VTE", items:[
+  {id:"cvd-multi", label:"Multiple risk factors for CVD (smoking, diabetes, hypertension, obesity, dyslipidaemia)", note:"More than one risk factor present — clinical judgement required.", options:[{label:null, values:V(1,2,2,3,2,3)}]},
+  {id:"htn-controlled", label:"Hypertension — controlled", options:[{label:null, values:V(1,1,1,2,1,3)}]},
+  {id:"htn-stage1", label:"Hypertension — Stage 1 (clinic 140–159/90–99, home 135–149/85–94)", options:[{label:null, values:V(1,1,1,2,1,3)}]},
+  {id:"htn-stage23", label:"Hypertension — Stage 2/3 (clinic ≥160/≥100, home ≥150/≥95)", options:[{label:null, values:V(1,1,1,2,1,4)}]},
+  {id:"htn-vascular", label:"Hypertension with vascular disease", options:[{label:null, values:V(1,2,2,3,2,4)}]},
+  {id:"htn-pregnancy", label:"History of high blood pressure during pregnancy", options:[{label:null, values:V(1,1,1,1,1,2)}]},
+  {id:"ihd", label:"Current or history of ischaemic heart disease", options:[{label:null, values:[1,{i:3,c:2},{i:3,c:2},3,2,4]}]},
+  {id:"stroke", label:"Stroke / TIA (arterial or venous thrombosis, intracerebral haemorrhage)", options:[{label:null, values:[1,{i:3,c:2},{i:3,c:2},3,2,4]}]},
+  {id:"dyslipid", label:"Known dyslipidaemias", options:[{label:null, values:V(1,2,2,2,2,2)}]},
+  {id:"vte-hx", label:"History of VTE, or current VTE on anticoagulants", options:[{label:null, values:V(1,2,2,3,2,4)}]},
+  {id:"vte-fhx", label:"VTE risk factor — family history (1st degree relative)", options:[{label:null, values:V(1,1,1,2,1,3)}]},
+  {id:"vte-surgery", label:"VTE risk factor — major surgery", options:[{label:null, values:[1,1,2,{i:3,c:2},2,4]}]},
+  {id:"vte-immobility", label:"VTE risk factor — immobility (wheelchair use, chronic conditions)", options:[{label:null, values:V(1,1,1,2,1,3)}]},
+  {id:"vte-multi", label:"Multiple VTE risk factors (e.g. cancer, high BMI, thrombotic/inflammatory disorders)", note:"More than one risk factor present — clinical judgement required.", options:[{label:null, values:V(1,1,1,3,1,4)}]},
+  {id:"varicose", label:"Varicose veins", options:[{label:null, values:V(1,1,1,1,1,1)}]},
+  {id:"svt", label:"Superficial venous thrombosis", options:[{label:null, values:V(1,1,1,2,1,2)}]},
+  {id:"thrombophilia", label:"Known thrombogenic mutation (factor V Leiden, prothrombin, protein S/C, antithrombin deficiency)", options:[{label:null, values:V(1,2,2,3,2,4)}]},
+  {id:"valvular", label:"Valvular / congenital heart disease", options:[
+      {label:"Uncomplicated", values:V(1,1,1,1,1,2)},
+      {label:"Complicated (e.g. pulmonary hypertension, history of endocarditis)", values:V(2,2,1,1,1,4)},
+  ]},
+  {id:"cardiomyopathy", label:"Cardiomyopathy", options:[
+      {label:"Normal cardiac function", values:V(1,1,1,1,1,2)},
+      {label:"Impaired cardiac function", values:V(2,2,2,2,2,4)},
+  ]},
+  {id:"afib", label:"Atrial fibrillation", options:[{label:null, values:V(1,2,2,2,2,4)}]},
+  {id:"longqt", label:"Known long QT syndrome", note:"Numeric categories vary by initiation/continuation and are not reliably extractable from the summary table — seek specialist cardiology / contraceptive input.", isTextOnly:true},
+]},
+{section:"Neurological", items:[
+  {id:"headache-nonmig", label:"Headaches — non-migrainous (mild or severe)", options:[{label:null, values:[1,1,1,1,1,{i:1,c:2}]}]},
+  {id:"migraine-no-aura", label:"Migraine without aura, any age", options:[{label:null, values:[1,2,2,2,1,{i:2,c:3}]}]},
+  {id:"migraine-aura", label:"Migraine with aura, any age", options:[{label:null, values:V(1,2,2,2,2,4)}]},
+  {id:"migraine-aura-hx", label:"History (≥5 years ago) of migraine with aura", options:[{label:null, values:V(1,2,2,2,2,3)}]},
+  {id:"iih", label:"Idiopathic intracranial hypertension", options:[{label:null, values:V(1,1,1,1,1,2)}]},
+  {id:"epilepsy", label:"Epilepsy (not accounting for drug interactions)", options:[{label:null, values:V(1,1,1,1,1,1)}]},
+  {id:"aed", label:"Taking anti-epileptic drugs", note:"Certain anti-epileptics affect steroid hormone bioavailability — check an interaction checker (e.g. Stockley's) separately; not reflected as an MEC category.", isTextOnly:true},
+  {id:"ms-immobile", label:"Multiple sclerosis, with prolonged immobility", options:[{label:null, values:V(1,1,1,2,1,3)}]},
+  {id:"ms-mobile", label:"Multiple sclerosis, without prolonged immobility", options:[{label:null, values:V(1,1,1,2,1,1)}]},
+]},
+{section:"Mental health", items:[
+  {id:"mood", label:"Anxiety and mood disorders", note:"No consistent evidence hormonal contraception worsens or improves pre-existing anxiety/mood disorders. Provide individualised counselling and advise monitoring mood after starting.", isTextOnly:true},
+]},
+{section:"Breast & reproductive tract", items:[
+  {id:"bleed-irregular", label:"Vaginal bleeding — irregular pattern, without heavy bleeding", options:[{label:null, values:V(1,1,2,2,2,1)}]},
+  {id:"bleed-heavy", label:"Vaginal bleeding — heavy or prolonged (regular or irregular)", options:[{label:null, values:[2,{i:2,c:1},2,2,2,1]}]},
+  {id:"bleed-unexplained", label:"Unexplained vaginal bleeding, before evaluation", note:"Suspicious for a serious underlying condition.", options:[{label:null, values:[{i:4,c:2},{i:4,c:2},{i:3,c:2},{i:3,c:2},1,1]}]},
+  {id:"endometriosis", label:"Endometriosis", options:[{label:null, values:V(2,1,1,1,1,1)}]},
+  {id:"ovarian-benign", label:"Benign ovarian tumours (including cysts)", options:[{label:null, values:V(1,1,1,1,1,1)}]},
+  {id:"dysmenorrhoea", label:"Severe dysmenorrhoea", options:[{label:null, values:V(2,1,1,1,1,1)}]},
+  {id:"gtd", label:"Gestational trophoblastic disease", options:[
+      {label:"Undetectable hCG levels", values:V(1,1,1,1,1,1)},
+      {label:"Decreasing hCG levels", values:V(3,3,1,1,1,1)},
+      {label:"Persistently elevated hCG or malignant disease", values:V(4,4,1,1,1,1)},
+  ]},
+  {id:"ectropion", label:"Cervical ectropion", options:[{label:null, values:V(1,1,1,1,1,1)}]},
+  {id:"cin", label:"Cervical intraepithelial neoplasia (incl. high-risk HPV)", options:[{label:null, values:V(1,2,1,2,1,2)}]},
+  {id:"cervical-cancer", label:"Cervical cancer", options:[
+      {label:"Awaiting treatment", values:[{i:4,c:2},{i:4,c:2},2,2,1,2]},
+      {label:"Radical trachelectomy", values:V(3,3,2,2,1,2)},
+  ]},
+  {id:"breast-mass", label:"Undiagnosed breast mass / breast symptoms", options:[{label:null, values:[1,2,2,2,2,{i:3,c:2}]}]},
+  {id:"breast-benign", label:"Benign breast conditions", options:[{label:null, values:V(1,1,1,1,1,1)}]},
+  {id:"breast-fhx", label:"Family history of breast cancer", options:[{label:null, values:V(1,1,1,1,1,1)}]},
+  {id:"brca", label:"Carrier of high-risk gene mutation (e.g. BRCA1/2)", options:[{label:null, values:V(1,2,2,2,2,3)}]},
+  {id:"breast-cancer", label:"Breast cancer", options:[
+      {label:"Currently being treated", values:V(1,4,4,4,4,4)},
+      {label:"Completed treatment", values:V(1,3,3,3,3,3)},
+  ]},
+  {id:"ovarian-cancer", label:"Ovarian cancer (epithelial)", options:[{label:null, values:V(1,1,1,2,1,2)}]},
+  {id:"endometrial-cancer", label:"Endometrial cancer", options:[{label:null, values:[{i:4,c:2},{i:4,c:2},1,2,1,2]}]},
+  {id:"fibroids", label:"Uterine fibroids", options:[
+      {label:"Without distortion of uterine cavity", values:V(1,1,1,1,1,1)},
+      {label:"With distortion of uterine cavity", values:V(3,3,1,1,1,1)},
+  ]},
+  {id:"anatomical", label:"Anatomical abnormalities", note:"Relates to IUD fit; other methods unaffected.", options:[
+      {label:"Distorted uterine cavity", values:V(3,3,1,1,1,1)},
+      {label:"Other abnormalities", values:V(2,2,1,1,1,1)},
+  ]},
+  {id:"pid-past", label:"Past pelvic inflammatory disease (no current STI risk factors)", options:[{label:null, values:V(1,1,1,1,1,1)}]},
+  {id:"pid-current", label:"Current pelvic inflammatory disease", options:[{label:null, values:[{i:4,c:2},{i:4,c:2},1,1,1,1]}]},
+  {id:"sti-symptomatic", label:"Chlamydia / gonorrhoea / M. genitalium — with symptoms/signs", options:[{label:null, values:[{i:4,c:2},{i:4,c:2},1,1,1,1]}]},
+  {id:"sti-asymptomatic", label:"Chlamydia / gonorrhoea / M. genitalium — no symptoms/signs", options:[{label:null, values:[{i:3,c:2},{i:3,c:2},1,1,1,1]}]},
+  {id:"sti-other", label:"Other current STI (excluding HIV & hepatitis)", options:[{label:null, values:V(2,2,1,1,1,1)}]},
+  {id:"vaginitis", label:"Current vaginitis (incl. trichomonas, bacterial vaginosis)", options:[{label:null, values:V(2,2,1,1,1,1)}]},
+]},
+{section:"Infections", items:[
+  {id:"hiv-risk", label:"High risk for HIV", options:[{label:null, values:V(1,1,1,1,1,1)}]},
+  {id:"hiv-well", label:"Living with HIV — clinically well, on treatment", options:[{label:null, values:V(2,2,1,1,1,1)}]},
+  {id:"hiv-unwell", label:"Living with HIV — clinically unwell, not on treatment", options:[{label:null, values:[{i:3,c:2},{i:3,c:2},1,1,1,1]}]},
+  {id:"hiv-meds", label:"Taking HIV antiretroviral / PrEP medication", note:"May affect hormone bioavailability — use the University of Liverpool HIV Drug Interactions checker; note possible bone-density considerations with tenofovir + DMPA.", isTextOnly:true},
+  {id:"tb-nonpelvic", label:"Tuberculosis — non-pelvic", options:[{label:null, values:V(1,1,1,1,1,1)}]},
+  {id:"tb-pelvic", label:"Tuberculosis — pelvic", options:[{label:null, values:[{i:4,c:3},{i:4,c:3},1,1,1,1]}]},
+]},
+{section:"Endocrine", items:[
+  {id:"diabetes-gestational", label:"Diabetes — history of gestational disease only", options:[{label:null, values:V(1,1,1,1,1,1)}]},
+  {id:"diabetes-nonvascular", label:"Diabetes — non-insulin or insulin dependent, no vascular disease", options:[{label:null, values:V(1,2,2,2,2,2)}]},
+  {id:"diabetes-nephropathy", label:"Diabetes — nephropathy / retinopathy / neuropathy", options:[{label:null, values:V(1,2,2,2,2,3)}]},
+  {id:"diabetes-vascular", label:"Diabetes — other vascular disease", options:[{label:null, values:V(1,2,2,2,2,3)}]},
+  {id:"thyroid", label:"Thyroid disorder (goitre, hyper- or hypothyroid)", options:[{label:null, values:V(1,1,1,1,1,1)}]},
+  {id:"ckd", label:"Chronic kidney disease", note:"POP category excludes drospirenone (avoid in severe renal insufficiency / acute renal failure).", options:[
+      {label:"Current nephrotic syndrome", values:V(2,2,2,3,2,4)},
+      {label:"Haemodialysis", values:V(2,2,2,3,2,4)},
+      {label:"Peritoneal dialysis", values:V(2,2,2,3,2,4)},
+  ]},
+]},
+{section:"Gastrointestinal", items:[
+  {id:"gallbladder", label:"Gallbladder disease", options:[
+      {label:"Symptomatic — treated by cholecystectomy", values:V(1,2,2,2,2,2)},
+      {label:"Symptomatic — medically treated", values:V(1,2,2,2,2,3)},
+      {label:"Symptomatic — current", values:V(1,2,2,2,2,3)},
+      {label:"Asymptomatic", values:V(1,2,2,2,2,2)},
+  ]},
+  {id:"cholestasis", label:"History of cholestasis", options:[
+      {label:"Pregnancy-related", values:V(1,1,1,1,1,2)},
+      {label:"Past combined-pill related", values:V(1,2,2,2,2,3)},
+  ]},
+  {id:"hepatitis", label:"Viral hepatitis", options:[
+      {label:"Acute or flare", values:[1,1,1,1,1,{i:3,c:2}]},
+      {label:"Carrier", values:V(1,1,1,1,1,1)},
+      {label:"Chronic", values:V(1,1,1,1,1,1)},
+  ]},
+  {id:"cirrhosis", label:"Cirrhosis", options:[
+      {label:"Mild (compensated, no complications)", values:V(1,1,1,1,1,1)},
+      {label:"Severe (decompensated)", values:V(1,3,3,3,3,4)},
+  ]},
+  {id:"liver-tumour", label:"Liver tumours", options:[
+      {label:"Benign — focal nodular hyperplasia", values:V(1,2,2,2,2,2)},
+      {label:"Benign — hepatocellular adenoma", values:V(1,3,3,3,3,4)},
+      {label:"Malignant — hepatocellular carcinoma", values:V(1,3,3,3,3,4)},
+  ]},
+  {id:"ibd", label:"Inflammatory bowel disease (Crohn's / ulcerative colitis)", options:[{label:null, values:V(1,1,1,2,2,2)}]},
+]},
+{section:"Anaemias", items:[
+  {id:"thalassaemia", label:"Thalassaemia", options:[{label:null, values:V(2,1,1,1,1,1)}]},
+  {id:"sickle-disease", label:"Sickle cell disease", options:[{label:null, values:V(2,1,1,2,1,2)}]},
+  {id:"sickle-trait", label:"Sickle cell trait", note:"Insufficient evidence for formal MEC ratings; small increase in VTE risk, so alternatives to CHC should generally be prioritised.", isTextOnly:true},
+  {id:"iron-deficiency", label:"Iron deficiency anaemia", options:[{label:null, values:V(2,1,1,1,1,1)}]},
+]},
+{section:"Rheumatic disease", items:[
+  {id:"ra", label:"Rheumatoid arthritis", options:[{label:null, values:V(1,2,2,2,2,2)}]},
+  {id:"sle-neg", label:"SLE — no antiphospholipid antibodies", options:[{label:null, values:V(1,2,2,2,2,2)}]},
+  {id:"sle-pos", label:"SLE — positive antiphospholipid antibodies", options:[{label:null, values:V(1,2,2,3,2,4)}]},
+]},
+{section:"Drug interactions", items:[
+  {id:"drug-interactions", label:"Taking other medication", note:"Check the FSRH/CoSRH guideline on drug interactions with hormonal contraception, BNF, SPC (eMC), or Stockley's Interaction Checker — drug interactions affect effectiveness, not safety, so are not given MEC categories.", isTextOnly:true},
+]},
+];
+
+// ---- State ----
+// selected: map id -> {optionIndex} for normal items (checkbox on, with chosen sub-option)
+let selected = {};
+
+function catClass(v){
+  if(v===1) return "c1";
+  if(v===2) return "c2";
+  if(v===3) return "c3";
+  if(v===4) return "c4";
+  return "cna";
+}
+function catLabel(v){
+  if(v===null||v===undefined) return "–";
+  if(v==="NA") return "N/A";
+  return String(v);
+}
+
+// Age-based contributions (per method) -> returns array of 6 values or nulls
+function ageValues(age){
+  if(age===null||isNaN(age)) return null;
+  const cuiud = age<20?2:1;
+  const lng = age<20?2:1;
+  const imp = 1;
+  let dmpa;
+  if(age<18) dmpa=2; else if(age<=45) dmpa=1; else dmpa=2;
+  const pop = 1;
+  let chc;
+  if(age<40) chc=1; else if(age<=50) chc=2; else chc=2; // >50: treat as 2, flagged via note
+  return [cuiud,lng,imp,dmpa,pop,chc];
+}
+function bmiValues(bmi){
+  if(bmi===null||isNaN(bmi)) return null;
+  if(bmi<30) return [1,1,1,1,1,1];
+  if(bmi<35) return [1,1,1,1,1,2];
+  return [1,1,1,2,1,3];
+}
+function smokeValues(status){
+  const map = {
+    none: null,
+    lt35: [1,1,1,1,1,2],
+    ge35_lt15: [1,1,1,1,1,3],
+    ge35_ge15: [1,1,1,1,1,4],
+    stopped_lt1: [1,1,1,1,1,3],
+    stopped_ge1: [1,1,1,1,1,2],
+  };
+  return map[status]||null;
+}
+
+// merge a value (number|{i,c}|"NA"|null) into running {i,c} max trackers
+function foldInto(tracker, val){
+  if(val===null||val===undefined) return;
+  if(val==="NA") return;
+  let i,c;
+  if(typeof val==="object"){ i=val.i; c=val.c; } else { i=val; c=val; }
+  if(tracker.i===null||i>tracker.i) tracker.i=i;
+  if(tracker.c===null||c>tracker.c) tracker.c=c;
+}
+
+function computeResults(){
+  const trackers = METHODS.map(()=>({i:null,c:null}));
+  let factorCount = 0;
+  const cat2Count = [0,0,0,0,0,0];
+  const cat3Count = [0,0,0,0,0,0];
+
+  function applyValues(values){
+    if(!values) return;
+    values.forEach((v,idx)=>{
+      foldInto(trackers[idx], v);
+      const iv = (typeof v==="object")? Math.max(v.i,v.c) : v;
+      if(iv===2) cat2Count[idx]++;
+      if(iv===3) cat3Count[idx]++;
+    });
+  }
+
+  // profile
+  const age = parseFloat(document.getElementById("ageInput").value);
+  const bmi = parseFloat(document.getElementById("bmiInput").value);
+  const smoke = document.getElementById("smokeInput").value;
+  const av = ageValues(isNaN(age)?null:age);
+  const bv = bmiValues(isNaN(bmi)?null:bmi);
+  const sv = smokeValues(smoke);
+  if(av){ applyValues(av); factorCount++; }
+  if(bv){ applyValues(bv); factorCount++; }
+  if(sv){ applyValues(sv); factorCount++; }
+
+  // selected conditions
+  DATA.forEach(sec=>{
+    sec.items.forEach(item=>{
+      if(item.isTextOnly) return;
+      const sel = selected[item.id];
+      if(sel===undefined) return;
+      const opt = item.options[sel];
+      applyValues(opt.values);
+      factorCount++;
+    });
+  });
+
+  return {trackers, factorCount, cat2Count, cat3Count, age};
+}
+
+function renderMethodGrid(){
+  const {trackers, factorCount, cat2Count, cat3Count, age} = computeResults();
+  const grid = document.getElementById("methodGrid");
+  grid.innerHTML = "";
+  METHODS.forEach((m,idx)=>{
+    const t = trackers[idx];
+    const div = document.createElement("div");
+    div.className="method-cell";
+    const hasData = t.i!==null;
+    const sameIC = t.i===t.c;
+    let inner = `<div class="m-name">${m}</div><div class="m-cats">`;
+    if(!hasData){
+      inner += `<div class="badge cna">–</div>`;
+    } else if(sameIC){
+      inner += `<div class="badge ${catClass(t.i)}">${catLabel(t.i)}</div>`;
+    } else {
+      inner += `<div><div class="badge ${catClass(t.i)}">${catLabel(t.i)}</div><div class="ic-tag">Init</div></div>`;
+      inner += `<div><div class="badge ${catClass(t.c)}">${catLabel(t.c)}</div><div class="ic-tag">Cont.</div></div>`;
+    }
+    inner += `</div>`;
+    div.innerHTML = inner;
+    grid.appendChild(div);
+  });
+  document.getElementById("selCount").textContent = `${factorCount} factor${factorCount===1?"":"s"} selected`;
+
+  // cumulative warnings
+  const warnWrap = document.getElementById("cumulativeWarnings");
+  warnWrap.innerHTML = "";
+  let any3=false, any2=false;
+  cat3Count.forEach((n,idx)=>{ if(n>=2) any3=true; });
+  cat2Count.forEach((n,idx)=>{ if(n>=2) any2=true; });
+  if(!isNaN(age) && age>50){
+    const d=document.createElement("div");
+    d.className="cumulative-warn";
+    d.textContent="Age is over 50 — CHC is generally not advised regardless of MEC category; consider alternatives per FSRH guidance.";
+    warnWrap.appendChild(d);
+  }
+  if(any3){
+    const d=document.createElement("div");
+    d.className="cumulative-warn severe";
+    d.textContent="Multiple category 3 factors apply to the same method — in combination this may amount to an unacceptable risk (effectively category 4). Clinical judgement and/or specialist referral is needed.";
+    warnWrap.appendChild(d);
+  } else if(any2){
+    const d=document.createElement("div");
+    d.className="cumulative-warn";
+    d.textContent="Multiple category 2 factors apply to the same method relating to a similar risk (e.g. VTE or CVD) — consider whether the cumulative risk outweighs the benefit.";
+    warnWrap.appendChild(d);
+  }
+}
+
+function renderChips(){
+  const wrap = document.getElementById("chipsWrap");
+  wrap.innerHTML = "";
+  let n=0;
+  DATA.forEach(sec=>{
+    sec.items.forEach(item=>{
+      if(item.isTextOnly) return;
+      const sel = selected[item.id];
+      if(sel===undefined) return;
+      n++;
+      const opt = item.options[sel];
+      const chip = document.createElement("div");
+      chip.className="chip";
+      const txt = opt.label? `${item.label} — ${opt.label}` : item.label;
+      chip.innerHTML = `<span>${txt}</span>`;
+      const btn = document.createElement("button");
+      btn.innerHTML = "✕";
+      btn.onclick = ()=>{ delete selected[item.id]; refreshAll(); };
+      chip.appendChild(btn);
+      wrap.appendChild(chip);
+    });
+  });
+  document.getElementById("emptyNote").style.display = n===0? "block":"none";
+}
+
+function refreshAll(){
+  renderMethodGrid();
+  renderChips();
+  renderSections(document.getElementById("searchBox").value.trim().toLowerCase());
+}
+
+function renderSections(filter){
+  const container = document.getElementById("sections");
+  container.innerHTML = "";
+  DATA.forEach(sec=>{
+    const matchingItems = sec.items.filter(it=> !filter || it.label.toLowerCase().includes(filter) || sec.section.toLowerCase().includes(filter));
+    if(filter && matchingItems.length===0) return;
+
+    const secDiv = document.createElement("div");
+    secDiv.className = "section";
+    const head = document.createElement("div");
+    head.className = "section-head" + (filter? " open":"");
+    head.innerHTML = `<span>${sec.section}</span><span class="chev">▶</span>`;
+    const body = document.createElement("div");
+    body.className = "section-body" + (filter? " open":"");
+
+    (filter? matchingItems : sec.items).forEach(item=>{
+      const itDiv = document.createElement("div");
+      itDiv.className = "item";
+
+      if(item.isTextOnly){
+        itDiv.innerHTML = `<div class="item-row"><span style="width:16px;flex-shrink:0;"></span><span class="item-label" style="cursor:default;">${item.label}</span></div><div class="textonly">${item.note}</div>`;
+        body.appendChild(itDiv);
+        return;
+      }
+
+      const checked = selected[item.id]!==undefined;
+      const row = document.createElement("div");
+      row.className="item-row";
+      const cb = document.createElement("input");
+      cb.type="checkbox"; cb.checked=checked;
+      cb.onchange = ()=>{
+        if(cb.checked){ selected[item.id]=0; } else { delete selected[item.id]; }
+        refreshAll();
+      };
+      const lbl = document.createElement("span");
+      lbl.className="item-label";
+      lbl.textContent = item.label;
+      lbl.onclick = ()=>{ cb.checked=!cb.checked; cb.onchange(); };
+      row.appendChild(cb); row.appendChild(lbl);
+      itDiv.appendChild(row);
+
+      if(item.note){
+        const note = document.createElement("div");
+        note.className="item-note";
+        note.textContent = item.note;
+        itDiv.appendChild(note);
+      }
+
+      if(item.options.length>1 || item.options[0].label){
+        const subWrap = document.createElement("div");
+        subWrap.className="sub-select";
+        subWrap.style.display = checked? "block":"none";
+        const sel = document.createElement("select");
+        item.options.forEach((opt,idx)=>{
+          const o = document.createElement("option");
+          o.value=idx; o.textContent=opt.label||item.label;
+          if(selected[item.id]===idx) o.selected=true;
+          sel.appendChild(o);
+        });
+        sel.onchange = ()=>{ selected[item.id]=parseInt(sel.value); refreshAll(); };
+        subWrap.appendChild(sel);
+        itDiv.appendChild(subWrap);
+        cb.addEventListener("change", ()=>{ subWrap.style.display = cb.checked? "block":"none"; });
+      }
+
+      body.appendChild(itDiv);
+    });
+
+    head.onclick = ()=>{
+      head.classList.toggle("open");
+      body.classList.toggle("open");
+    };
+    secDiv.appendChild(head);
+    secDiv.appendChild(body);
+    container.appendChild(secDiv);
+  });
+}
+
+function renderMethodsKey(){
+  const grid = document.getElementById("methodsKeyGrid");
+  grid.innerHTML = "";
+  METHODS.forEach(m=>{
+    const info = METHOD_INFO[m];
+    const card = document.createElement("div");
+    card.className = "method-card";
+    card.innerHTML = `
+      <div class="mc-top"><span class="mc-abbr">${m}</span><span class="mc-full">${info.full}</span></div>
+      <div class="mc-desc">${info.desc}</div>
+      <div class="mc-meta">
+        <span><b>Lasts:</b> ${info.duration}</span>
+        <span><b>Hormonal:</b> ${info.hormonal}</span>
+        <span><b>User action:</b> ${info.user_action}</span>
+        <span><b>Fertility return:</b> ${info.fertility}</span>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+document.getElementById("methodsKeyHead").onclick = ()=>{
+  document.getElementById("methodsKeyHead").classList.toggle("open");
+  document.getElementById("methodsKeyBody").classList.toggle("open");
+};
+
+document.getElementById("ageInput").addEventListener("input", renderMethodGrid);
+document.getElementById("bmiInput").addEventListener("input", renderMethodGrid);
+document.getElementById("smokeInput").addEventListener("change", renderMethodGrid);
+document.getElementById("searchBox").addEventListener("input", (e)=>{
+  renderSections(e.target.value.trim().toLowerCase());
+});
+
+// init
+renderMethodsKey();
+renderMethodGrid();
+renderChips();
+renderSections("");
+</script>
+</body>
+</html>
