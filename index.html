@@ -2,16 +2,17 @@
 <html lang="en-GB">
 <head>
 <meta charset="utf-8">
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>GPCalc | Clinical calculators for UK general practice</title>
 <meta name="description" content="GPCalc: quick-reference clinical calculators for UK general practice, built from UK guidance. UKMEC 2025, NICE hypertension and a medications reference.">
 <style>
 :root{
-  --bg:#f5f7fa; --ink:#1b2430; --muted:#5b6777; --line:#dfe4ea; --card:#ffffff;
-  --accent:#005eb8; --accent2:#1565c0; --chip:#eef2f7;
+  --bg:#f2f7f6; --ink:#0e1446; --muted:#4f5b7e; --line:#d5e1e0; --card:#ffffff;
+  --accent:#1f6f8b; --accent2:#1f6f8b; --chip:#e6f1ef;
 }
 @media (prefers-color-scheme:dark){
-  :root{--bg:#11161c;--ink:#e6ebf0;--muted:#9aa7b4;--line:#2c3642;--card:#1a2129;--accent:#4c9be8;--accent2:#4c9be8;--chip:#26303b}
+  :root{--bg:#090d2c;--ink:#e8edff;--muted:#9ea9d0;--line:#232b66;--card:#121846;--accent:#7ee06a;--accent2:#7ee06a;--chip:#1a2158}
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
@@ -33,13 +34,47 @@ a.card:focus-visible{box-shadow:0 0 0 3px color-mix(in srgb,var(--accent2) 40%,t
 .donate{margin-top:14px}.donate a{color:var(--accent);font-weight:700}
 footer{font:12px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--muted);text-align:center;margin-top:34px;padding-top:18px;border-top:1px solid var(--line)}
 footer a{color:var(--accent)}
+.hero{display:flex;align-items:center;justify-content:space-between;gap:36px;flex-wrap:wrap-reverse;margin-bottom:34px}
+.hero-text{flex:1 1 380px}
+.hero-text .lede{margin-bottom:0}
+.logo-hero{width:clamp(180px,32vw,300px);height:auto;flex:0 0 auto;margin:0 auto;filter:drop-shadow(0 14px 30px rgba(14,20,70,.28))}
+.logo-hero .al{stroke-dasharray:1;stroke-dashoffset:1;animation:arrowDraw 6s ease-in-out infinite}
+.logo-hero .ah{opacity:0;transform-box:fill-box;transform-origin:20% 80%;animation:arrowHead 6s ease-in-out infinite}
+@keyframes arrowDraw{0%{stroke-dashoffset:1}38%{stroke-dashoffset:0}88%{stroke-dashoffset:0;opacity:1}96%{opacity:0}100%{stroke-dashoffset:1;opacity:0}}
+@keyframes arrowHead{0%,34%{opacity:0;transform:scale(.4)}44%{opacity:1;transform:scale(1.15)}50%{transform:scale(1)}88%{opacity:1;transform:scale(1)}96%,100%{opacity:0;transform:scale(1)}}
+@media (prefers-color-scheme:dark){.logo-hero{filter:drop-shadow(0 0 28px rgba(126,224,106,.28))}}
+@media (prefers-reduced-motion:reduce){.logo-hero .al{animation:none;stroke-dashoffset:0}.logo-hero .ah{animation:none;opacity:1}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="eyebrow">Clinical tools for UK general practice</div>
-  <h1>GPCalc</h1>
-  <p class="lede">Free quick-reference calculators for GPs and primary care clinicians. Enter a patient's details and get the guidance-based answer straight away. Each tool mirrors published UK guidance and links back to its source.</p>
+<div class="hero">
+  <div class="hero-text">
+    <div class="eyebrow">Clinical tools for UK general practice</div>
+    <h1>GPCalc</h1>
+    <p class="lede">Free quick-reference calculators for GPs and primary care clinicians. Enter a patient's details and get the guidance-based answer straight away. Each tool mirrors published UK guidance and links back to its source.</p>
+  </div>
+  <svg class="logo-hero" xmlns="http://www.w3.org/2000/svg" viewBox="173 173 678 678" role="img" aria-label="GPCalc logo: medical cross and calculator with a rising arrow">
+<defs>
+<linearGradient id="hgg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8af07a"/><stop offset="1" stop-color="#3fae7a"/></linearGradient>
+<linearGradient id="hgt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a9490"/><stop offset="1" stop-color="#2a6a8c"/></linearGradient>
+</defs>
+<rect x="173" y="173" width="678" height="678" rx="125" fill="#0e1446"/>
+<path d="M441 298h142a14 14 0 0 1 14 14v113h0v0h0v0H314a16 16 0 0 0-16 16v141a16 16 0 0 0 16 16H427V312a14 14 0 0 1 14-14z" fill="url(#hgt)" stroke="url(#hgg)" stroke-width="12" stroke-linejoin="round"/>
+<path d="M512 304h71a8 8 0 0 1 8 8v113H512z" fill="#6fdc6f" opacity=".85"/>
+<rect x="430" y="440" width="295" height="285" rx="30" fill="#25708a" stroke="url(#hgg)" stroke-width="14"/>
+<rect x="535" y="458" width="168" height="90" rx="10" fill="#0e1446"/>
+<rect x="512" y="578" width="90" height="127" rx="12" fill="#2a9490"/>
+<rect x="617" y="578" width="86" height="127" rx="12" fill="#7ee06a"/>
+<path d="M533 641h42M554 620v42" stroke="#0e1446" stroke-width="9" stroke-linecap="round"/>
+<path d="M636 632h50M636 652h50" stroke="#0e1446" stroke-width="9" stroke-linecap="round"/>
+<g class="arrow">
+<path class="al" pathLength="1" d="M415 627 560 432 603 492 706 403" fill="none" stroke="#0e1446" stroke-width="38" stroke-linejoin="miter"/>
+<path class="al" pathLength="1" d="M415 627 560 432 603 492 706 403" fill="none" stroke="url(#hgg)" stroke-width="20" stroke-linejoin="miter"/>
+<polygon class="ah" points="742,352 668,376 716,434" fill="url(#hgg)" stroke="#0e1446" stroke-width="8" stroke-linejoin="round"/>
+</g>
+</svg>
+  </div>
 
   <div class="grid">
     <a class="card" href="/ukmec/">
