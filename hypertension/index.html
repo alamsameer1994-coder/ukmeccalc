@@ -1,0 +1,989 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NICE Hypertension Calculator</title>
+<style>
+:root{
+  --bg:#f5f7fa; --panel:#ffffff; --ink:#1b2430; --muted:#5b6777; --line:#dfe4ea;
+  --accent:#005eb8; --accent-ink:#ffffff;
+  --red:#c62828; --red-bg:#fdecec; --amber:#b26a00; --amber-bg:#fff4e0;
+  --green:#2e7d32; --green-bg:#e8f5e9; --blue:#1565c0; --blue-bg:#e8f1fc;
+  --grey:#546e7a; --grey-bg:#eef1f4; --chip:#eef2f7;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#11161c; --panel:#1a2129; --ink:#e6ebf0; --muted:#9aa7b4; --line:#2c3642;
+    --accent:#4c9be8; --accent-ink:#0b1320;
+    --red:#ff7b72; --red-bg:#3a1d1d; --amber:#f0b25a; --amber-bg:#3a2d16;
+    --green:#7ccf83; --green-bg:#1b3320; --blue:#79b4f5; --blue-bg:#182b42;
+    --grey:#a9b8c4; --grey-bg:#232c36; --chip:#26303b;
+  }
+}
+:root[data-theme="dark"]{
+    --bg:#11161c; --panel:#1a2129; --ink:#e6ebf0; --muted:#9aa7b4; --line:#2c3642;
+    --accent:#4c9be8; --accent-ink:#0b1320;
+    --red:#ff7b72; --red-bg:#3a1d1d; --amber:#f0b25a; --amber-bg:#3a2d16;
+    --green:#7ccf83; --green-bg:#1b3320; --blue:#79b4f5; --blue-bg:#182b42;
+    --grey:#a9b8c4; --grey-bg:#232c36; --chip:#26303b;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+header{background:var(--accent);color:var(--accent-ink);padding:18px 16px}
+header .wrap{max-width:1180px;margin:0 auto;display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+header h1{margin:0;font-size:22px;letter-spacing:-.01em}
+header p{margin:2px 0 0;opacity:.9;font-size:13px}
+header button{background:transparent;border:1px solid currentColor;color:inherit;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:13px}
+.wrap{max-width:1180px;margin:0 auto}
+main{padding:16px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:16px;align-items:start}
+@media (max-width:880px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+.panel h2{font-size:15px;margin:0 0 12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg label{flex:1;text-align:center;padding:10px 6px;cursor:pointer;font-weight:600;font-size:14px}
+.seg input{display:none}
+.seg input:checked + span{color:var(--accent-ink)}
+.seg label:has(input:checked){background:var(--accent);color:var(--accent-ink)}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:10px}
+.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:3px;font-weight:600}
+.field input[type=number],.field select{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font-size:15px}
+.bp{display:flex;align-items:center;gap:6px}
+.bp input{min-width:0}
+.bp span{color:var(--muted)}
+.checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:6px 14px}
+.checks label{display:flex;gap:8px;align-items:flex-start;font-size:14px;cursor:pointer;padding:3px 0}
+.checks input{margin-top:3px;accent-color:var(--accent)}
+.sub{font-size:12px;color:var(--muted)}
+.hint{font-size:12px;color:var(--muted);margin:-4px 0 10px}
+.hidden{display:none!important}
+fieldset{border:1px dashed var(--line);border-radius:10px;padding:10px 12px;margin:0 0 10px}
+legend{font-size:12px;color:var(--muted);font-weight:700;padding:0 4px;text-transform:uppercase;letter-spacing:.04em}
+#results{position:sticky;top:12px}
+@media (max-width:880px){#results{position:static}}
+.summary{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.pill{border-radius:999px;padding:5px 12px;font-weight:700;font-size:13px;border:1px solid var(--line);background:var(--chip)}
+.pill.red{background:var(--red-bg);color:var(--red);border-color:transparent}
+.pill.amber{background:var(--amber-bg);color:var(--amber);border-color:transparent}
+.pill.green{background:var(--green-bg);color:var(--green);border-color:transparent}
+.pill.blue{background:var(--blue-bg);color:var(--blue);border-color:transparent}
+.card{border-radius:10px;padding:12px 14px;margin-bottom:10px;border-left:5px solid var(--grey);background:var(--grey-bg)}
+.card.red{border-color:var(--red);background:var(--red-bg)}
+.card.amber{border-color:var(--amber);background:var(--amber-bg)}
+.card.green{border-color:var(--green);background:var(--green-bg)}
+.card.blue{border-color:var(--blue);background:var(--blue-bg)}
+.card h3{margin:0 0 6px;font-size:15px}
+.card.red h3{color:var(--red)} .card.amber h3{color:var(--amber)} .card.green h3{color:var(--green)} .card.blue h3{color:var(--blue)}
+.card ul{margin:0;padding-left:18px}
+.card li{margin:3px 0}
+.ref{display:inline-block;font-size:11px;font-weight:700;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:0 6px;margin-left:4px;color:var(--muted);white-space:nowrap}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.btn{background:var(--accent);color:var(--accent-ink);border:0;border-radius:8px;padding:8px 14px;font-weight:600;cursor:pointer;font-size:14px}
+.btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+.empty{color:var(--muted);text-align:center;padding:30px 10px}
+details{border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:var(--panel)}
+details summary{cursor:pointer;padding:10px 14px;font-weight:600}
+details .inner{padding:0 14px 12px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.03em}
+.disclaimer{font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px;margin-top:8px}
+@media print{header button,.actions,#inputs{display:none}.grid{grid-template-columns:1fr}#results{position:static}}
+/* ---------- patient leaflet page ---------- */
+#leaflet{padding:0 16px 32px}
+.leaf-bar{max-width:820px;margin:16px auto;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;position:sticky;top:0;background:var(--bg);padding:8px 0;z-index:2}
+.leaf{max-width:820px;margin:0 auto;background:#fff;color:#212b32;border-radius:12px;padding:32px 36px;border:1px solid var(--line);font-size:16px;line-height:1.6}
+@media (max-width:600px){.leaf{padding:20px 18px}}
+.leaf h1{font-size:28px;line-height:1.2;margin:4px 0 12px;color:#212b32}
+.leaf h2{font-size:21px;margin:28px 0 8px;color:#005eb8}
+.leaf h3{font-size:18px;margin:20px 0 6px;color:#212b32}
+.leaf ul{padding-left:22px}
+.leaf li{margin:4px 0}
+.leaf .sub{color:#4c6272}
+.leaf-head{border-bottom:4px solid #005eb8;padding-bottom:12px;margin-bottom:16px}
+.leaf-kicker{margin:0;color:#005eb8;font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:13px}
+.leaf-lead{font-size:18px;color:#4c6272;margin:0}
+.leaf-box{background:#f0f4f5;border-left:8px solid #005eb8;padding:12px 18px;border-radius:4px}
+.leaf-box h2{margin-top:4px}
+.leaf-box p{margin:6px 0}
+.fill{display:inline-block;min-width:140px;border-bottom:1px dashed #768692;padding:0 4px;outline:none}
+.fill:focus{background:#fff9c4}
+.leaf-warn{background:#fff9c4;border-left:8px solid #ffb81c;padding:10px 16px;border-radius:4px}
+.leaf-urgent{background:#fde8e8;border-left:8px solid #d5281b;padding:6px 18px 10px;border-radius:4px;margin-top:24px}
+.leaf-urgent h2{color:#d5281b}
+.leaf-foot{font-size:13px;color:#4c6272;border-top:1px solid #d8dde0;padding-top:12px;margin-top:28px}
+body.leaflet-open main, body.leaflet-open header{display:none}
+@media print{
+  body.leaflet-open .leaf-bar, body.leaflet-open .leaf-noprint{display:none}
+  body.leaflet-open{background:#fff}
+  body.leaflet-open #leaflet{padding:0}
+  body.leaflet-open .leaf{border:0;padding:0;max-width:none}
+  .leaf h2,.leaf h3{break-after:avoid} .leaf-box,.leaf-urgent,.leaf-warn{break-inside:avoid}
+}
+</style>
+<style>.site-back{display:inline-block;font:600 13px/1 -apple-system,"Segoe UI",Arial,sans-serif;color:inherit;opacity:.85;text-decoration:none;margin:10px 16px 0}.site-back:hover{opacity:1;text-decoration:underline}@media print{.site-back,.site-foot{display:none!important}}</style></head>
+<body>
+<header>
+  <div class="wrap">
+    <div>
+      <a class="site-back" style="margin:0 0 6px" href="/">← All calculators</a>
+      <h1>NICE Hypertension Calculator</h1>
+      <p>Adults ≥18 · NICE NG136 Hypertension in adults: diagnosis and management (last updated 26 Feb 2026)</p>
+    </div>
+    <button id="themeBtn" type="button">Toggle theme</button>
+  </div>
+</header>
+
+<main class="wrap">
+<div class="grid">
+
+<!-- ================= INPUTS ================= -->
+<div id="inputs">
+  <div class="panel">
+    <h2>Scenario</h2>
+    <div class="seg">
+      <label><input type="radio" name="mode" value="dx" checked><span>New / suspected hypertension</span></label>
+      <label><input type="radio" name="mode" value="tx"><span>Known hypertension – review</span></label>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Patient</h2>
+    <div class="row">
+      <div class="field"><label for="age">Age (years)</label><input id="age" type="number" min="18" max="110" inputmode="numeric"></div>
+      <div class="field"><label for="sex">Sex</label>
+        <select id="sex"><option value="">–</option><option value="f">Female</option><option value="m">Male</option></select></div>
+      <div class="field"><label for="qrisk">QRISK3 10-yr risk (%)</label><input id="qrisk" type="number" min="0" max="100" step="0.1" inputmode="decimal"></div>
+    </div>
+    <div class="checks">
+      <label><input type="checkbox" id="black"><span>Black African or African–Caribbean family origin</span></label>
+      <label id="pregWrap" class="hidden"><input type="checkbox" id="preg"><span>Pregnant, planning pregnancy or breastfeeding</span></label>
+      <label><input type="checkbox" id="frail"><span>Frailty or multimorbidity</span></label>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Comorbidities &amp; risk</h2>
+    <div class="checks">
+      <label><input type="checkbox" id="t2dm"><span>Type 2 diabetes</span></label>
+      <label><input type="checkbox" id="t1dm"><span>Type 1 diabetes</span></label>
+      <label><input type="checkbox" id="ckd"><span>Chronic kidney disease / renal disease</span></label>
+      <label><input type="checkbox" id="cvd"><span>Established CVD <span class="sub">(IHD, stroke/TIA, PAD, aortic aneurysm, HF)</span></span></label>
+      <label><input type="checkbox" id="hf"><span>Heart failure</span></label>
+      <label><input type="checkbox" id="tod"><span>Target organ damage <span class="sub">(LVH, CKD, retinopathy, raised ACR)</span></span></label>
+    </div>
+    <div class="row" id="acrRow" style="margin-top:10px">
+      <div class="field"><label for="acr">Urine ACR (mg/mmol)</label>
+        <select id="acr"><option value="">Unknown</option><option value="lt70">Below 70</option><option value="ge70">70 or more</option></select></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Blood pressure</h2>
+    <div class="row">
+      <div class="field"><label>Clinic BP <span id="clinicLbl">(lower of last 2 readings)</span></label>
+        <div class="bp"><input id="csys" type="number" placeholder="Sys" inputmode="numeric"><span>/</span><input id="cdia" type="number" placeholder="Dia" inputmode="numeric"></div></div>
+      <div class="field"><label>Out-of-clinic average</label>
+        <div class="bp"><input id="asys" type="number" placeholder="Sys" inputmode="numeric"><span>/</span><input id="adia" type="number" placeholder="Dia" inputmode="numeric"></div></div>
+      <div class="field"><label for="atype">Method</label>
+        <select id="atype"><option value="ABPM">ABPM (daytime avg)</option><option value="HBPM">HBPM (avg)</option></select></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Standing BP (after ≥1 min)</label>
+        <div class="bp"><input id="ssys" type="number" placeholder="Sys" inputmode="numeric"><span>/</span><input id="sdia" type="number" placeholder="Dia" inputmode="numeric"></div></div>
+    </div>
+    <p class="hint">For postural checks, enter the lying (or seated) reading as the clinic BP and the standing reading here.</p>
+    <div class="checks">
+      <label><input type="checkbox" id="postSx"><span>Symptoms of postural hypotension (falls, postural dizziness)</span></label>
+      <label><input type="checkbox" id="irreg"><span>Irregular pulse (e.g. AF)</span></label>
+      <label><input type="checkbox" id="armdiff"><span>Inter-arm difference &gt;15 mmHg</span></label>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Red flags</h2>
+    <div class="checks">
+      <label><input type="checkbox" id="retinal"><span>Retinal haemorrhage or papilloedema</span></label>
+      <label><input type="checkbox" id="lifeThreat"><span>Life-threatening symptoms <span class="sub">(new confusion, chest pain, signs of heart failure, AKI)</span></span></label>
+      <label><input type="checkbox" id="phaeo"><span>Suspected phaeochromocytoma <span class="sub">(labile/postural hypotension, headache, palpitations, pallor, abdominal pain, diaphoresis)</span></span></label>
+    </div>
+  </div>
+
+  <div class="panel" id="txPanel">
+    <h2>Current antihypertensives</h2>
+    <div class="checks">
+      <label><input type="checkbox" id="ace"><span>ACE inhibitor</span></label>
+      <label><input type="checkbox" id="arb"><span>ARB</span></label>
+      <label><input type="checkbox" id="ccb"><span>Calcium-channel blocker</span></label>
+      <label><input type="checkbox" id="thz"><span>Thiazide-like diuretic <span class="sub">(indapamide)</span></span></label>
+      <label><input type="checkbox" id="bfz"><span>Conventional thiazide <span class="sub">(bendroflumethiazide / HCTZ)</span></span></label>
+      <label><input type="checkbox" id="spiro"><span>Spironolactone</span></label>
+      <label><input type="checkbox" id="alpha"><span>Alpha-blocker</span></label>
+      <label><input type="checkbox" id="beta"><span>Beta-blocker</span></label>
+    </div>
+    <fieldset style="margin-top:12px">
+      <legend>Before stepping up</legend>
+      <div class="checks">
+        <label><input type="checkbox" id="adherent"><span>Adherence discussed and confirmed</span></label>
+        <label><input type="checkbox" id="optimal"><span>On optimal tolerated doses</span></label>
+      </div>
+    </fieldset>
+    <div class="row">
+      <div class="field"><label for="k">Serum K⁺ (mmol/L)</label><input id="k" type="number" step="0.1" inputmode="decimal"></div>
+      <div class="field"><label for="egfr">eGFR (mL/min/1.73m²)</label><input id="egfr" type="number" inputmode="numeric"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Known intolerances</h2>
+    <div class="checks">
+      <label><input type="checkbox" id="aceCough"><span>ACE inhibitor not tolerated (e.g. cough)</span></label>
+      <label><input type="checkbox" id="ccbOed"><span>CCB not tolerated (e.g. oedema)</span></label>
+    </div>
+    <div class="actions" style="margin-top:12px"><button class="btn ghost" type="button" id="resetBtn">Reset all</button></div>
+  </div>
+</div>
+
+<!-- ================= RESULTS ================= -->
+<div id="results">
+  <div class="panel">
+    <h2>NICE-recommended plan</h2>
+    <div id="pills" class="summary"></div>
+    <div id="out"><div class="empty">Enter age and clinic blood pressure to see the plan.</div></div>
+    <div class="actions">
+      <button class="btn" type="button" id="copyBtn">Copy plan for notes</button>
+      <button class="btn ghost" type="button" onclick="window.print()">Print</button>
+    </div>
+    <p class="disclaimer">Decision support only, based on NICE NG136 and the cross-referenced targets from NG203 (CKD) and NG17 (type 1 diabetes). It does not replace clinical judgement, the full guideline or local formularies. Excludes pregnancy (NG133), under-18s and secondary hypertension management.</p>
+  </div>
+
+  <div class="panel">
+    <h2>Quick reference</h2>
+    <details><summary>Diagnosis &amp; staging</summary><div class="inner">
+      <table>
+        <tr><th>Stage</th><th>Clinic</th><th>ABPM / HBPM</th></tr>
+        <tr><td>Stage 1</td><td>140/90 – 159/99</td><td>135/85 – 149/94</td></tr>
+        <tr><td>Stage 2</td><td>≥160/100 and &lt;180/120</td><td>≥150/95</td></tr>
+        <tr><td>Severe</td><td>Sys ≥180 or dia ≥120</td><td>–</td></tr>
+      </table>
+      <p class="sub">Diagnosis = clinic ≥140/90 <b>and</b> ABPM daytime / HBPM average ≥135/85 (1.2.8). ABPM: ≥2 readings/hour while awake, average of ≥14. HBPM: 2 readings ≥1 min apart, twice daily, 4–7 days, discard day 1.</p>
+    </div></details>
+    <details><summary>Clinic BP targets</summary><div class="inner">
+      <table>
+        <tr><th>Group</th><th>&lt;80 yrs</th><th>≥80 yrs</th></tr>
+        <tr><td>Hypertension ± T2DM</td><td>&lt;140/90</td><td>&lt;150/90</td></tr>
+        <tr><td>T1DM, ACR &lt;70</td><td>&lt;140/90</td><td>&lt;150/90</td></tr>
+        <tr><td>T1DM, ACR ≥70</td><td>&lt;130/80</td><td>&lt;150/90</td></tr>
+        <tr><td>CKD, ACR &lt;70</td><td>&lt;140/90</td><td>&lt;140/90</td></tr>
+        <tr><td>CKD, ACR ≥70</td><td>&lt;130/80</td><td>&lt;130/80</td></tr>
+      </table>
+      <p class="sub">ABPM/HBPM targets: &lt;135/85 (under 80), &lt;145/85 (80 and over). Same targets with or without CVD (1.4.23). Use standing BP if significant postural drop.</p>
+    </div></details>
+    <details><summary>Drug treatment steps</summary><div class="inner">
+      <table>
+        <tr><th>Step</th><th>Treatment</th></tr>
+        <tr><td>1</td><td>T2DM (any age/origin) or &lt;55 and not Black African/African–Caribbean → <b>ACEi or ARB</b><br>≥55, or Black African/African–Caribbean (no T2DM) → <b>CCB</b><br>CCB not tolerated or heart failure → thiazide-like diuretic</td></tr>
+        <tr><td>2</td><td>On A → add C <i>or</i> D. On C → add A <i>or</i> D (ARB preferred over ACEi if Black African/African–Caribbean)</td></tr>
+        <tr><td>3</td><td>A + C + D (check adherence and optimal doses first)</td></tr>
+        <tr><td>4</td><td>Resistant hypertension – confirm with ABPM/HBPM, check postural BP and adherence. K⁺ ≤4.5 → consider low-dose spironolactone; K⁺ &gt;4.5 → consider alpha- or beta-blocker; or seek specialist advice</td></tr>
+        <tr><td>–</td><td>Uncontrolled on optimal doses of 4 drugs → seek specialist advice</td></tr>
+      </table>
+      <p class="sub">A = ACEi or ARB (never both), C = CCB, D = thiazide-like diuretic.</p>
+    </div></details>
+    <details><summary>Same-day referral</summary><div class="inner">
+      <ul>
+        <li>Clinic BP ≥180/120 <b>with</b> retinal haemorrhage/papilloedema (accelerated hypertension) or life-threatening symptoms (new confusion, chest pain, signs of heart failure, AKI) (1.5.2)</li>
+        <li>Suspected phaeochromocytoma (1.5.3)</li>
+      </ul>
+    </div></details>
+    <details id="lifestyleRef"><summary>Lifestyle advice &amp; patient leaflet</summary><div class="inner">
+      <p class="sub" style="margin-top:0">Offer to everyone with suspected or diagnosed hypertension and repeat periodically (1.4.1), and to anyone with raised BP who is not diagnosed (1.2.11).</p>
+      <ul>
+        <li>Diet and regular exercise – give guidance plus written or audiovisual material (1.4.2)</li>
+        <li>Alcohol – ask, and encourage reduction if excessive (1.4.3)</li>
+        <li>Discourage excessive coffee and caffeine-rich products (1.4.4)</li>
+        <li>Low sodium; no potassium-chloride salt substitutes in older people, diabetes, pregnancy, kidney disease or those on ACEi/ARB (1.4.5)</li>
+        <li>Do not offer calcium, magnesium or potassium supplements to lower BP (1.4.6)</li>
+        <li>Smoking cessation advice and support (1.4.7)</li>
+        <li>Signpost local group-based lifestyle support (1.4.8)</li>
+      </ul>
+      <div class="actions"><button class="btn" type="button" data-open-leaflet>Open patient leaflet</button></div>
+    </div></details>
+  </div>
+</div>
+
+</div>
+</main>
+<footer class="site-foot" style="max-width:1180px;margin:8px auto 0;padding:16px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;line-height:1.6;text-align:center">
+  <strong>For clinical reference only.</strong> Does not replace clinical judgement; verify against <a href="https://www.nice.org.uk/guidance/ng136" target="_blank" rel="noopener" style="color:var(--accent)">NICE NG136</a>.<br>
+  © 2026 Sameer Alam · <a href="/" style="color:var(--accent)">All calculators</a> · <a href="mailto:alam.sameer1994@gmail.com?subject=Hypertension%20calculator%20feedback" style="color:var(--accent)">Report an issue or suggest a correction</a>
+</footer>
+
+<!-- ================= PATIENT LEAFLET (separate page) ================= -->
+<section id="leaflet" class="hidden" aria-label="Patient information leaflet">
+  <div class="leaf-bar">
+    <button class="btn ghost" type="button" id="leafBack">← Back to calculator</button>
+    <div class="actions" style="margin:0">
+      <button class="btn" type="button" id="leafCopy">Copy text</button>
+      <button class="btn" type="button" id="leafShare">Share</button>
+      <button class="btn ghost" type="button" id="leafPrint">Print / save as PDF</button>
+    </div>
+  </div>
+  <article class="leaf" id="leafDoc">
+    <div class="leaf-head">
+      <p class="leaf-kicker">Patient information</p>
+      <h1>High blood pressure: living well and lowering your numbers</h1>
+      <p class="leaf-lead">This leaflet explains what high blood pressure is, why it matters, and the everyday changes that can bring it down. It is for adults who have been told their blood pressure is raised or who have been diagnosed with high blood pressure (hypertension).</p>
+    </div>
+
+    <div class="leaf-box">
+      <h2>Your details</h2>
+      <p class="sub leaf-noprint">Click any field to type in it before printing or copying.</p>
+      <p><b>Name:</b> <span class="fill" contenteditable="true" spellcheck="false">&nbsp;</span></p>
+      <p><b>Your latest clinic blood pressure:</b> <span class="fill" id="leafBP" contenteditable="true">&nbsp;</span></p>
+      <p><b>Your target in clinic:</b> below <span class="fill" id="leafClinic" contenteditable="true">140/90</span> mmHg</p>
+      <p><b>Your target at home:</b> below <span class="fill" id="leafHome" contenteditable="true">135/85</span> mmHg</p>
+      <p><b>Next review:</b> <span class="fill" contenteditable="true">&nbsp;</span></p>
+    </div>
+
+    <h2>What is blood pressure?</h2>
+    <p>Blood pressure is the force your heart uses to push blood around your body. It is written as two numbers, for example 135/85:</p>
+    <ul>
+      <li>the <b>top number (systolic)</b> is the pressure when your heart beats</li>
+      <li>the <b>bottom number (diastolic)</b> is the pressure when your heart relaxes between beats.</li>
+    </ul>
+    <p>High blood pressure rarely causes symptoms, so many people feel completely well. Over time, though, it puts extra strain on your heart, blood vessels, kidneys and eyes. It raises your risk of heart attack, stroke, heart failure, kidney disease and dementia. The good news is that lowering it reduces these risks, and small changes add up.</p>
+
+    <h2>What can I do to lower my blood pressure?</h2>
+    <p>Lifestyle changes help everyone with raised blood pressure. For some people they are enough on their own. For others they work alongside medicines and may mean you need fewer tablets or lower doses. Pick one or two changes to start with and build from there.</p>
+
+    <h3>1. Cut down on salt</h3>
+    <p>Salt makes your body hold on to water, which raises blood pressure. Adults should have no more than <b>6g of salt a day</b> – about one level teaspoon – and most of us eat more than this without realising.</p>
+    <ul>
+      <li>About three-quarters of the salt we eat is already in food when we buy it – bread, breakfast cereals, ready meals, soups, sauces, processed meat, cheese and crisps.</li>
+      <li>Check food labels: <b>more than 1.5g of salt per 100g is high</b> (often a red label); 0.3g or less per 100g is low (green).</li>
+      <li>Don't add salt at the table, and taste food before seasoning. Use herbs, spices, garlic, lemon, black pepper or vinegar for flavour instead.</li>
+      <li>Your taste buds adjust within a few weeks, and food will taste salty enough with less.</li>
+    </ul>
+    <p class="leaf-warn"><b>Salt substitutes:</b> "low-salt" products that replace salt with potassium chloride are <b>not suitable</b> for everyone. Do not use them if you are older, have diabetes or kidney disease, are pregnant, or take blood pressure tablets called ACE inhibitors (names ending in "-pril", such as ramipril) or ARBs (names ending in "-sartan", such as losartan). Cut down on salt instead.</p>
+
+    <h3>2. Eat a healthy, balanced diet</h3>
+    <ul>
+      <li>Aim for at least <b>5 portions of fruit and vegetables a day</b> – fresh, frozen, tinned (in water or juice) and dried all count.</li>
+      <li>Base meals on wholegrain starchy foods such as wholemeal bread, brown rice, wholewheat pasta and oats.</li>
+      <li>Include beans, pulses, fish (try for 2 portions a week, one oily), eggs and lean meat.</li>
+      <li>Choose lower-fat dairy, and cut back on saturated fat, sugary drinks, cakes, biscuits and takeaways.</li>
+    </ul>
+    <p>You do <b>not</b> need to take calcium, magnesium or potassium supplements to lower your blood pressure – they are not recommended for this. A healthy diet gives you what you need.</p>
+
+    <h3>3. Be more active</h3>
+    <p>Regular activity strengthens your heart and can lower blood pressure by several points. Adults should aim for:</p>
+    <ul>
+      <li>at least <b>150 minutes of moderate activity a week</b> (for example brisk walking, cycling, swimming or dancing) – that is 30 minutes on 5 days; <b>or</b> 75 minutes of vigorous activity (such as running or sport)</li>
+      <li>strengthening activities (such as gardening, carrying shopping, yoga or using weights) on at least 2 days a week</li>
+      <li>breaking up long periods of sitting.</li>
+    </ul>
+    <p>Moderate activity means you breathe faster and feel warmer but can still talk. If you have not been active for a while, start slowly – even 10 minutes at a time helps – and build up. If you have heart problems or other health conditions, ask your GP or nurse what is safe for you.</p>
+
+    <h3>4. Keep to a healthy weight</h3>
+    <p>Carrying extra weight, especially around your waist, makes your heart work harder. Losing even a small amount (around 5% of your body weight) can lower your blood pressure. Combining healthier eating with more activity works best. You can check your body mass index (BMI) on the NHS website, and the free NHS Weight Loss Plan app can help. Ask your GP practice about local weight management services.</p>
+
+    <h3>5. Drink less alcohol</h3>
+    <p>Drinking too much alcohol raises blood pressure over time. To keep health risks low:</p>
+    <ul>
+      <li>drink <b>no more than 14 units a week</b> (about 6 pints of average-strength beer or 6 medium glasses of wine)</li>
+      <li>spread your drinking over 3 or more days, and have several alcohol-free days each week</li>
+      <li>avoid heavy drinking on one or two days.</li>
+    </ul>
+    <p>If you find it hard to cut down, speak to your GP practice – free, confidential support is available.</p>
+
+    <h3>6. Go easy on caffeine</h3>
+    <p>Drinking a lot of coffee, strong tea, cola or energy drinks can raise your blood pressure. You do not need to cut them out, but avoid having large amounts, and consider switching some drinks to decaffeinated versions or water.</p>
+
+    <h3>7. Stop smoking</h3>
+    <p>Smoking does not cause long-term high blood pressure on its own, but it narrows and damages your arteries. If you smoke and have high blood pressure, your risk of heart attack and stroke is much higher. Stopping is the single best thing you can do for your heart.</p>
+    <ul>
+      <li>You are <b>up to 3 times more likely to quit</b> with support and stop-smoking aids than on willpower alone.</li>
+      <li>Your local NHS Stop Smoking Service, GP practice or pharmacy can offer free support, nicotine replacement and medicines.</li>
+      <li>Vaping is less harmful than smoking and can help some people quit.</li>
+    </ul>
+
+    <h3>8. Get support and look after your wellbeing</h3>
+    <p>Making changes is easier with others. Ask your GP practice about local groups and services – for example walking groups, weight management programmes, the NHS Digital Weight Management Programme or social prescribing. Getting enough sleep and finding ways to manage stress are good for your overall health too.</p>
+
+    <h2>Checking your blood pressure at home</h2>
+    <p>Home readings help you and your healthcare team see how you are doing. If you have a home monitor:</p>
+    <ul>
+      <li>use a monitor that is <b>clinically validated</b> (the British and Irish Hypertension Society lists approved models) with the right cuff size for your arm</li>
+      <li>sit quietly for 5 minutes first, with your back supported, feet flat on the floor and arm resting at heart level</li>
+      <li>avoid caffeine, smoking or exercise for 30 minutes before</li>
+      <li>take <b>2 readings, at least 1 minute apart</b>, in the morning and evening, and write them all down</li>
+      <li>bring your readings to your appointments or send them as your practice asks.</li>
+    </ul>
+    <p>Home readings are usually a little lower than readings taken at the surgery, which is why your home target is slightly lower.</p>
+
+    <h2>About blood pressure medicines</h2>
+    <p>Many people need one or more medicines as well as lifestyle changes. If you are prescribed them:</p>
+    <ul>
+      <li>take them every day, even when you feel well – they only work while you take them</li>
+      <li>do not stop them without talking to your GP, nurse or pharmacist</li>
+      <li>tell us about side effects such as a dry cough, ankle swelling or dizziness – there are usually alternatives</li>
+      <li>if you are planning a pregnancy, are pregnant or breastfeeding, tell your GP as some medicines need changing</li>
+      <li>get up slowly if you feel dizzy or light-headed when standing.</li>
+    </ul>
+    <p>Your blood pressure, medicines and lifestyle should be reviewed at least once a year.</p>
+
+    <div class="leaf-urgent">
+      <h2>When to get help urgently</h2>
+      <p><b>Call 999</b> if you have chest pain, sudden weakness or numbness of the face, arm or leg, slurred speech, sudden confusion or severe shortness of breath.</p>
+      <p><b>Contact your GP the same day, or call 111,</b> if your blood pressure is <b>180/120 or higher</b> on repeated readings, or you have a very high reading with a severe headache, blurred vision or other changes in your sight, or you feel unwell.</p>
+    </div>
+
+    <h2>Where to find more help</h2>
+    <ul>
+      <li><b>NHS – high blood pressure:</b> nhs.uk/conditions/high-blood-pressure-hypertension</li>
+      <li><b>NHS Better Health</b> (eating, activity, weight, drinking, quitting): nhs.uk/better-health</li>
+      <li><b>NHS Quit Smoking</b> app and local stop smoking services: nhs.uk/better-health/quit-smoking</li>
+      <li><b>NHS Couch to 5K</b> app – free from app stores</li>
+      <li><b>Blood Pressure UK:</b> bloodpressureuk.org</li>
+      <li><b>British Heart Foundation:</b> bhf.org.uk</li>
+      <li><b>Drinkline</b> (free, confidential): 0300 123 1110</li>
+    </ul>
+
+    <p class="leaf-foot">Based on NICE guideline NG136, Hypertension in adults: diagnosis and management (updated February 2026), and NHS healthy living advice. This leaflet is general information and does not replace advice from your own healthcare team.</p>
+  </article>
+</section>
+
+<script>
+(function(){
+const $ = id => document.getElementById(id);
+const num = id => { const v = parseFloat($(id).value); return isNaN(v) ? null : v; };
+const chk = id => $(id).checked;
+const R = r => `<span class="ref">${r}</span>`;
+
+// ---------- theme ----------
+$('themeBtn').addEventListener('click', () => {
+  const root = document.documentElement;
+  const cur = root.getAttribute('data-theme');
+  const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const next = cur ? (cur === 'dark' ? 'light' : 'dark') : (sysDark ? 'light' : 'dark');
+  root.setAttribute('data-theme', next);
+  try { localStorage.setItem('htn-theme', next); } catch(e){}
+});
+try { const t = localStorage.getItem('htn-theme'); if (t) document.documentElement.setAttribute('data-theme', t); } catch(e){}
+
+// ---------- staging helpers ----------
+function clinicStage(s, d){ s=s||0; d=d||0;
+  if (s>=180 || d>=120) return 3;
+  if (s>=160 || d>=100) return 2;
+  if (s>=140 || d>=90) return 1;
+  return 0; }
+function ambStage(s, d){ s=s||0; d=d||0;
+  if (s>=150 || d>=95) return 2;
+  if (s>=135 || d>=85) return 1;
+  return 0; }
+const stageName = n => ['Normal / below threshold','Stage 1 hypertension','Stage 2 hypertension','Severe (stage 3) hypertension'][n];
+
+function read(){
+  return {
+    mode: document.querySelector('input[name=mode]:checked').value,
+    age: num('age'), sex: $('sex').value, qrisk: num('qrisk'),
+    black: chk('black'), preg: $('sex').value==='f' && chk('preg'), frail: chk('frail'),
+    t2dm: chk('t2dm'), t1dm: chk('t1dm'), ckd: chk('ckd'), cvd: chk('cvd') || chk('hf'), hf: chk('hf'), tod: chk('tod'),
+    acr: $('acr').value,
+    cs: num('csys'), cd: num('cdia'), as: num('asys'), ad: num('adia'), atype: $('atype').value,
+    ss: num('ssys'), sd: num('sdia'), postSx: chk('postSx'), irreg: chk('irreg'), armdiff: chk('armdiff'),
+    retinal: chk('retinal'), lifeThreat: chk('lifeThreat'), phaeo: chk('phaeo'),
+    ace: chk('ace'), arb: chk('arb'), ccb: chk('ccb'), thz: chk('thz'), bfz: chk('bfz'),
+    spiro: chk('spiro'), alpha: chk('alpha'), beta: chk('beta'),
+    adherent: chk('adherent'), optimal: chk('optimal'), k: num('k'), egfr: num('egfr'),
+    aceCough: chk('aceCough'), ccbOed: chk('ccbOed')
+  };
+}
+
+// ---------- targets ----------
+function getTargets(p){
+  const old = p.age >= 80;
+  const hi = p.acr === 'ge70';
+  let clinic, cref, amb = null, aref = '1.4.22', note = null;
+  if (p.ckd){
+    clinic = hi ? [130,80] : [140,90];
+    cref = hi ? 'NG203 1.6.2' : 'NG203 1.6.1';
+    if (!p.acr) note = 'ACR unknown – target is <130/80 if ACR ≥70 mg/mmol. Check ACR.';
+  } else if (p.t1dm && !old){
+    clinic = hi ? [130,80] : [140,90];
+    cref = 'NG17 1.13.8';
+    if (!p.acr) note = 'ACR unknown – target is <130/80 if ACR ≥70 mg/mmol. Check ACR.';
+  } else if (old){
+    clinic = [150,90]; cref = p.t1dm ? 'NG17 1.13.8' : '1.4.21'; amb = [145,85];
+  } else {
+    clinic = [140,90]; cref = '1.4.20'; amb = [135,85];
+  }
+  return {clinic, cref, amb, aref, note, old};
+}
+const below = (s,d,t) => (s==null || s < t[0]) && (d==null || d < t[1]);
+const fmt = t => `${t[0]}/${t[1]}`;
+
+// ---------- postural ----------
+function postural(p){
+  const indicated = p.t2dm || (p.age!=null && p.age>=80) || p.postSx;
+  let drop = null, sig = false;
+  if (p.cs!=null && p.ss!=null){
+    drop = {s: p.cs - p.ss, d: (p.cd!=null && p.sd!=null) ? p.cd - p.sd : 0};
+    sig = drop.s >= 20 || drop.d >= 10;
+  }
+  return {indicated, drop, sig};
+}
+
+// ---------- step 1 drug ----------
+function step1(p){
+  const items = [];
+  if (p.preg){
+    items.push(`Pregnant, planning pregnancy or breastfeeding: avoid ACE inhibitors and ARBs unless absolutely necessary; manage in line with NICE NG133 (hypertension in pregnancy) ${R('1.4.29')}`);
+    return items;
+  }
+  if (p.cvd) items.push(`Established CVD: first apply disease-specific recommendations (e.g. ACEi/ARB after MI, HFrEF treatment); if BP remains uncontrolled, follow the steps below ${R('1.4.31')}`);
+  if (p.ckd) items.push(`CKD: choose antihypertensive in line with NICE NG203 (ACEi/ARB favoured where there is albuminuria) ${R('1.4.26')}`);
+  if (p.t1dm) items.push(`Type 1 diabetes: see NICE NG17 for drug choice.`);
+  if (p.hf){
+    items.push(`<b>Heart failure:</b> offer a <b>thiazide-like diuretic</b> (e.g. indapamide) and follow NICE NG106 ${R('1.4.37')}`);
+  }
+  let drug, ref;
+  if (p.t2dm){
+    drug = p.black ? 'an <b>ARB</b> (preferred over ACEi – Black African/African–Caribbean origin)' : (p.aceCough ? 'an <b>ARB</b> (ACEi not tolerated)' : 'an <b>ACE inhibitor or ARB</b>');
+    ref = p.black ? '1.4.32, 1.4.30' : '1.4.32';
+    items.push(`Step 1 (type 2 diabetes, any age): offer ${drug} ${R(ref)}`);
+  } else if (p.black){
+    drug = p.ccbOed ? 'a <b>thiazide-like diuretic</b> (indapamide) – CCB not tolerated' : 'a <b>calcium-channel blocker</b>';
+    items.push(`Step 1 (Black African/African–Caribbean origin, no T2DM): offer ${drug} ${R(p.ccbOed ? '1.4.35, 1.4.36' : '1.4.35')}`);
+  } else if (p.age!=null && p.age < 55){
+    drug = p.aceCough ? 'an <b>ARB</b> (ACEi not tolerated)' : 'an <b>ACE inhibitor or ARB</b>';
+    items.push(`Step 1 (aged under 55): offer ${drug} ${R(p.aceCough ? '1.4.32, 1.4.33' : '1.4.32')}`);
+  } else {
+    drug = p.ccbOed ? 'a <b>thiazide-like diuretic</b> (indapamide) – CCB not tolerated' : 'a <b>calcium-channel blocker</b>';
+    items.push(`Step 1 (aged 55 or over, no T2DM): offer ${drug} ${R(p.ccbOed ? '1.4.35, 1.4.36' : '1.4.35')}`);
+  }
+  items.push(`If an ACEi is not tolerated (e.g. cough) switch to an ARB; if a CCB is not tolerated (e.g. oedema) use a thiazide-like diuretic ${R('1.4.33, 1.4.36')}`);
+  items.push(`Prefer once-daily, non-proprietary drugs; never combine an ACEi with an ARB ${R('1.4.26, 1.4.27, 1.4.34')}`);
+  return items;
+}
+
+// ---------- next step (on treatment) ----------
+function nextStep(p){
+  const cards = [];
+  const A = p.ace || p.arb, C = p.ccb, D = p.thz || p.bfz;
+  const n = (A?1:0) + (C?1:0) + (D?1:0);
+  const extra = p.spiro || p.alpha || p.beta;
+  const aWord = p.black && !p.t2dm ? 'an <b>ARB</b> (preferred over ACEi)' : (p.aceCough ? 'an <b>ARB</b>' : 'an <b>ACE inhibitor or ARB</b>');
+  const pre = [];
+  if (!p.adherent) pre.push(`Discuss whether medicines are being taken as prescribed and support adherence before stepping up ${R('1.4.40')}`);
+
+  if (p.preg && A) cards.push({c:'red', t:'ACEi / ARB in pregnancy, planned pregnancy or breastfeeding', i:[`ACE inhibitors and ARBs should not be used unless absolutely necessary – follow MHRA advice and manage per NICE NG133 ${R('1.4.29')}`]});
+  if (p.ace && p.arb) cards.push({c:'red', t:'ACEi + ARB combination', i:[`Do not combine an ACE inhibitor with an ARB to treat hypertension ${R('1.4.34')}`]});
+
+  if (n === 0 && !extra){
+    cards.push({c:'amber', t:'Start step 1 treatment', i: step1(p)});
+    return cards;
+  }
+  if (n === 0 && extra){
+    cards.push({c:'amber', t:'Non-standard regimen', i:[`Current drugs are outside NICE steps 1–3. Consider restructuring around ACEi/ARB, CCB and thiazide-like diuretic:`, ...step1(p)]});
+    return cards;
+  }
+  if (n === 1){
+    let add;
+    if (A) add = `add a <b>CCB</b> or a <b>thiazide-like diuretic</b> ${R('1.4.41')}`;
+    else if (C) add = `add ${aWord} or a <b>thiazide-like diuretic</b> ${R(p.black && !p.t2dm ? '1.4.42, 1.4.43' : '1.4.42')}`;
+    else add = `add ${aWord} or a <b>CCB</b> (NICE does not specify a step 2 for diuretic-first; this mirrors 1.4.41–1.4.42)`;
+    if (p.preg && !A) add = `add a <b>CCB</b> or <b>thiazide-like diuretic</b> as appropriate – avoid ACEi/ARB (NG133)`;
+    cards.push({c:'amber', t:'Step 2 treatment', i:[...pre, `Not at target on monotherapy: ${add}`, `The choice should be discussed with the person, taking account of their preferences – the NICE patient decision aid can help.`]});
+    return cards;
+  }
+  if (n === 2){
+    const missing = !A ? aWord : (!C ? 'a <b>CCB</b>' : 'a <b>thiazide-like diuretic</b>');
+    const i = [...pre];
+    if (!p.optimal) i.push(`Review medicines to ensure they are at <b>optimal tolerated doses</b> ${R('1.4.44')}`);
+    i.push(`If still not at target: add ${missing} to give <b>ACEi/ARB + CCB + thiazide-like diuretic</b> ${R('1.4.45')}`);
+    if (!A && p.preg) i.push('Pregnancy/breastfeeding: ACEi/ARB not appropriate – seek specialist/obstetric advice (NG133).');
+    cards.push({c:'amber', t:'Step 3 treatment', i});
+    return cards;
+  }
+  // n === 3
+  if (!p.optimal){
+    cards.push({c:'amber', t:'Optimise step 3 before labelling resistant', i:[...pre, `Ensure ACEi/ARB, CCB and thiazide-like diuretic are at optimal tolerated doses – only then regard as resistant hypertension ${R('1.4.44, 1.4.46')}`]});
+    return cards;
+  }
+  if (extra){
+    cards.push({c:'red', t:'Uncontrolled on 4 drugs', i:[...pre, `If BP remains uncontrolled on optimal tolerated doses of 4 drugs, <b>seek specialist advice</b> ${R('1.4.52')}`]});
+    return cards;
+  }
+  const i = [`Regard as <b>resistant hypertension</b> ${R('1.4.46')}`];
+  const confirm = [];
+  if (p.as==null) confirm.push('confirm raised clinic BP with ABPM or HBPM');
+  confirm.push('assess for postural hypotension');
+  if (!p.adherent) confirm.push('discuss adherence');
+  i.push(`Before further treatment: ${confirm.join('; ')} ${R('1.4.47')}`);
+  i.push(`Then consider a 4th drug <b>or</b> seek specialist advice ${R('1.4.48')}:`);
+  if (p.k == null){
+    i.push(`Check serum potassium to choose the step 4 drug (spironolactone if K⁺ ≤4.5; alpha- or beta-blocker if K⁺ >4.5).`);
+  } else if (p.k <= 4.5){
+    let s = `K⁺ ${p.k} mmol/L (≤4.5): consider <b>low-dose spironolactone</b> ${R('1.4.49')}`;
+    if (p.egfr != null && p.egfr < 60) s += ` – <b>caution: reduced eGFR (${p.egfr})</b>, increased hyperkalaemia risk`;
+    else s += ` – use particular caution if eGFR is reduced`;
+    i.push(s);
+    i.push(`Monitor sodium, potassium and renal function within 1 month of starting, then as needed ${R('1.4.50')}`);
+  } else {
+    i.push(`K⁺ ${p.k} mmol/L (&gt;4.5): consider an <b>alpha-blocker or beta-blocker</b> ${R('1.4.51')}`);
+  }
+  i.push(`If still uncontrolled on optimal doses of 4 drugs, seek specialist advice ${R('1.4.52')}`);
+  cards.push({c:'red', t:'Step 4 – resistant hypertension', i});
+  return cards;
+}
+
+// ---------- treatment decision (newly diagnosed) ----------
+function startDecision(p, stage){
+  const i = [];
+  let c = 'amber', level;
+  const fr = p.frail ? ` Use clinical judgement given frailty/multimorbidity ${R('NG56')}.` : '';
+  if (stage >= 2){
+    level = 'Offer drug treatment';
+    i.push(`<b>Offer antihypertensive drug treatment</b> plus lifestyle advice (stage 2 – any age) ${R('1.4.9')}.${fr}`);
+  } else if (stage === 1){
+    if (p.age < 80){
+      const reasons = [];
+      if (p.tod) reasons.push('target organ damage');
+      if (p.cvd) reasons.push('established CVD');
+      if (p.ckd) reasons.push('renal disease');
+      if (p.t1dm || p.t2dm) reasons.push('diabetes');
+      if (p.qrisk != null && p.qrisk >= 10) reasons.push(`QRISK ${p.qrisk}% (≥10%)`);
+      if (reasons.length){
+        level = 'Discuss drug treatment';
+        i.push(`<b>Discuss starting antihypertensive drug treatment</b> plus lifestyle advice – stage 1, under 80 with: ${reasons.join(', ')} ${R('1.4.10')}.${fr}`);
+      } else if (p.qrisk == null){
+        level = 'QRISK needed';
+        c = 'blue';
+        i.push(`Calculate <b>QRISK3</b> (using clinic BP): if ≥10% or TOD/CVD/renal disease/diabetes present → discuss drug treatment ${R('1.4.10, 1.3.2')}`);
+        if (p.age < 60) i.push(`If under 60 with QRISK &lt;10%, still <b>consider</b> drug treatment – 10-year risk may underestimate lifetime risk ${R('1.4.12')}`);
+      } else if (p.age < 60){
+        level = 'Consider drug treatment';
+        i.push(`<b>Consider</b> antihypertensive drug treatment plus lifestyle advice: under 60 with QRISK &lt;10% – 10-year risk may underestimate lifetime risk ${R('1.4.12')}`);
+      } else {
+        level = 'Lifestyle + annual review';
+        c = 'green';
+        i.push(`No NICE indication for drug treatment at present (stage 1, aged 60–79, QRISK &lt;10%, no TOD/CVD/renal disease/diabetes). <b>Lifestyle advice</b> and annual review; reassess risk ${R('1.4.10, 1.4.24')}`);
+      }
+    } else {
+      if ((p.cs!=null && p.cs > 150) || (p.cd!=null && p.cd > 90)){
+        level = 'Consider drug treatment';
+        i.push(`<b>Consider</b> antihypertensive drug treatment plus lifestyle advice: aged 80+ with stage 1 and clinic BP over 150/90 ${R('1.4.13')}.${fr}`);
+      } else {
+        level = 'Lifestyle + annual review';
+        c = 'green';
+        i.push(`Aged 80+ with clinic BP ≤150/90: lifestyle advice and annual review ${R('1.4.13, 1.4.24')}`);
+      }
+    }
+  }
+  i.push(`Discuss individual CV risk and preferences (including no treatment); continue lifestyle support whatever is chosen ${R('1.4.11')}`);
+  if (p.age < 40) i.push(`<b>Under 40:</b> consider specialist evaluation for secondary causes and a detailed assessment of long-term benefit vs risk ${R('1.4.14')}`);
+  if (p.cs!=null && p.cs>=160 && (p.cd==null || p.cd<90)) i.push(`Isolated systolic hypertension (≥160) – treat as for combined raised systolic and diastolic BP ${R('1.4.28')}`);
+  return {c, level, i, treat: /Offer|Discuss|Consider/.test(level) || level==='QRISK needed'};
+}
+
+// ---------- shared cards ----------
+function investigationsCard(){
+  return {c:'blue', t:'Investigations for target organ damage & CV risk', i:[
+    `Urine albumin:creatinine ratio and dipstick for haematuria ${R('1.3.3')}`,
+    `Bloods: HbA1c, U&amp;E, creatinine, eGFR, total and HDL cholesterol ${R('1.3.3')}`,
+    `Fundoscopy for hypertensive retinopathy ${R('1.3.3')}`,
+    `12-lead ECG ${R('1.3.3')}`,
+    `Formal CV risk assessment (QRISK3) using clinic BP ${R('1.2.5, 1.3.2')}`,
+    `If QRISK3 ≥10%, discuss lipid modification per NICE NG238 (cross-reference)`
+  ]};
+}
+function lifestyleCard(diagnosed){
+  return {c:'grey', t: diagnosed ? 'Lifestyle advice (offer and repeat periodically)' : 'Healthy living advice', i:[
+    `Diet, exercise, weight, alcohol, caffeine, salt, smoking and local support – patient leaflet provided ${R(diagnosed ? '1.4.1–1.4.8' : '1.2.11')}`,
+    `<span class="leaf-link"><button class="btn ghost" type="button" data-open-leaflet>Open patient leaflet</button> <button class="btn ghost" type="button" data-open-ref>Clinician summary</button></span>`
+  ]};
+}
+function targetCard(p, tg, ps){
+  const i = [`Clinic target: <b>below ${fmt(tg.clinic)}</b> ${R(tg.cref)}`];
+  if (tg.amb) i.push(`ABPM/HBPM target: <b>below ${fmt(tg.amb)}</b> (waking-hours average) ${R(tg.aref)}`);
+  else i.push(`No separate ABPM/HBPM target specified for this group – home readings run ~5 mmHg lower than clinic.`);
+  if (tg.note) i.push(tg.note);
+  if (p.cvd) i.push(`Same targets apply with or without CVD ${R('1.4.23')}`);
+  if (p.frail) i.push(`Frailty/multimorbidity – use clinical judgement on targets ${R('1.4.21')}`);
+  if (ps.sig) i.push(`Significant postural drop – <b>treat to a target based on standing BP</b> ${R('1.4.16')}`);
+  i.push(`Monitor with clinic BP; HBPM for those who wish to self-monitor, with training and advice ${R('1.4.15, 1.4.17, 1.4.19')}`);
+  i.push(`Annual review of BP, lifestyle, symptoms and medication ${R('1.4.24')}`);
+  return {c:'blue', t:'Targets & monitoring', i};
+}
+function posturalCard(p, ps){
+  if (!ps.indicated && !ps.sig) return null;
+  const i = [];
+  if (ps.indicated && !ps.drop){
+    const why = [p.t2dm && 'type 2 diabetes', p.age>=80 && 'aged 80+', p.postSx && 'postural symptoms'].filter(Boolean).join(', ');
+    i.push(`Check for postural hypotension (${why}): measure lying (or seated), then after standing ≥1 minute ${R('1.1.5, 1.4.16')}`);
+  }
+  if (ps.drop){
+    i.push(`Postural drop: ${ps.drop.s} / ${ps.drop.d} mmHg`);
+    if (ps.sig){
+      i.push(`<b>Significant postural hypotension</b> (≥20 systolic or ≥10 diastolic): consider causes and review current medication; manage falls risk (NICE CG161); measure subsequent BPs standing ${R('1.1.6')}`);
+      i.push(`Consider specialist referral if symptoms persist despite addressing causes ${R('1.1.6')}`);
+    } else if (p.postSx){
+      i.push(`Drop below threshold despite symptoms: if the baseline was seated, repeat starting lying down ${R('1.1.7')}; if still not confirmed, consider specialist assessment ${R('1.1.8')}`);
+    }
+  }
+  return {c: ps.sig ? 'amber' : 'blue', t:'Postural hypotension', i};
+}
+function measurementNotes(p){
+  const i = [];
+  if (p.irreg) i.push(`Irregular pulse – automated devices may be inaccurate; measure manually by brachial auscultation ${R('1.1.2')}`);
+  if (p.armdiff) i.push(`Inter-arm difference &gt;15 mmHg – repeat; if persistent, use the arm with the higher reading for all subsequent measurements ${R('1.2.1')}`);
+  return i.length ? {c:'grey', t:'Measurement technique', i} : null;
+}
+
+// ---------- main ----------
+function compute(){
+  const p = read();
+  $('txPanel').classList.toggle('hidden', p.mode !== 'tx');
+  $('pregWrap').classList.toggle('hidden', p.sex !== 'f');
+  $('clinicLbl').textContent = p.mode === 'tx' ? '(current)' : '(lower of last 2 readings)';
+
+  const out = [], pills = [];
+  const redFlagRefer = [];
+
+  if (p.phaeo) redFlagRefer.push(`Suspected phaeochromocytoma ${R('1.5.3')}`);
+  const severeClinic = (p.cs!=null && p.cs>=180) || (p.cd!=null && p.cd>=120);
+  if (severeClinic && p.retinal) redFlagRefer.push(`BP ≥180/120 with retinal haemorrhage or papilloedema (accelerated hypertension) ${R('1.5.2')}`);
+  if (severeClinic && p.lifeThreat) redFlagRefer.push(`BP ≥180/120 with life-threatening symptoms ${R('1.5.2')}`);
+  if (redFlagRefer.length){
+    out.push({c:'red', t:'Refer for SAME-DAY specialist assessment', i: redFlagRefer});
+    pills.push(['red','Same-day referral']);
+  }
+  if (!severeClinic && (p.retinal || p.lifeThreat) && p.cs!=null){
+    out.push({c:'amber', t:'Red-flag features below 180/120', i:[`NICE same-day referral criteria for accelerated hypertension apply at clinic BP ≥180/120 – use clinical judgement and assess the presenting features on their own merit ${R('1.5.2')}`]});
+  }
+
+  if (p.age == null || p.cs == null || p.cd == null){
+    render(out, pills, p, true);
+    return;
+  }
+  if (p.age < 18){
+    out.push({c:'red', t:'Outside guideline scope', i:['NG136 covers adults aged 18 and over.']});
+    render(out, pills, p);
+    return;
+  }
+  if (p.preg) out.push({c:'amber', t:'Pregnancy / planning / breastfeeding', i:[`Manage hypertension per NICE NG133. ACE inhibitors and ARBs should not be used unless absolutely necessary (MHRA) ${R('1.4.29')}`]});
+
+  const tg = getTargets(p);
+  const ps = postural(p);
+  leafState = {bp: `${p.cs}/${p.cd} mmHg`, clinic: fmt(tg.clinic), home: tg.amb ? fmt(tg.amb) : fmt([tg.clinic[0]-5, tg.clinic[1]-5])};
+  const cSt = clinicStage(p.cs, p.cd);
+  const hasAmb = p.as != null && p.ad != null;
+
+  if (p.mode === 'dx'){
+    // ---------- DIAGNOSIS ----------
+    if (cSt === 3 && !redFlagRefer.length){
+      const i = [`Clinic BP ${p.cs}/${p.cd} – severe hypertension without same-day referral features.`,
+        `Carry out investigations for target organ damage <b>as soon as possible</b> ${R('1.5.1')}`];
+      if (p.tod) i.push(`<b>Target organ damage present: consider starting antihypertensive treatment immediately</b>, without waiting for ABPM/HBPM ${R('1.5.1')}`);
+      else i.push(`If no target organ damage: repeat clinic BP <b>within 7 days</b>, or consider ABPM (HBPM if unsuitable) with clinical review within 7 days ${R('1.5.1')}`);
+      out.push({c:'red', t:'Severe hypertension (≥180/120)', i});
+      pills.push(['red', 'Severe']);
+      if (p.tod) out.push({c:'amber', t:'Drug choice if starting now', i: step1(p)});
+    }
+
+    let confirmedStage = null;
+    if (cSt === 0){
+      if (hasAmb && ambStage(p.as, p.ad) >= 1){
+        out.push({c:'amber', t:'Masked hypertension pattern', i:[
+          `Clinic BP below 140/90 but ${p.atype} average ${p.as}/${p.ad} is ≥135/85.`,
+          `This does not meet the NICE diagnostic criteria (1.2.8 requires clinic ≥140/90) – use clinical judgement; consider ongoing ABPM/HBPM ${R('1.4.18')}`]});
+        pills.push(['amber','Masked pattern']);
+      } else {
+        const i = [`Clinic BP ${p.cs}/${p.cd} – hypertension not diagnosed.`,
+          `Re-measure clinic BP at least every <b>5 years</b>; more often if below 140/90 but still raised ${R('1.2.10')}`,
+          `If BP is raised, offer healthy living advice in line with NHS information ${R('1.2.11')}`];
+        if (p.t2dm) i.push(`Type 2 diabetes: measure BP at least annually and reinforce lifestyle advice ${R('1.2.12')}`);
+        if (p.tod) i.push(`Target organ damage without hypertension – consider investigating alternative causes (NG203, NG106) ${R('1.2.9')}`);
+        out.push({c:'green', t:'Not hypertensive', i});
+        pills.push(['green','No hypertension']);
+      }
+    } else if (cSt >= 1 && cSt <= 2 && !hasAmb){
+      out.push({c:'amber', t:`Suspected hypertension – clinic ${stageName(cSt).toLowerCase()} range`, i:[
+        `Offer <b>ABPM</b> to confirm the diagnosis; offer HBPM if ABPM is unsuitable or not tolerated ${R('1.2.3, 1.2.4')}`,
+        `ABPM: ≥2 readings per hour while awake; use the average of at least 14 daytime readings ${R('1.2.6')}`,
+        `HBPM: 2 seated readings ≥1 min apart, twice daily for 4–7 days; discard day 1 and average the rest ${R('1.2.7')}`,
+        `While awaiting confirmation: investigations for target organ damage, then formal CV risk assessment ${R('1.2.5')}`,
+        `Enter the ABPM/HBPM average above to complete staging and the treatment plan.`]});
+      pills.push(['amber','Awaiting ABPM/HBPM']);
+      out.push(investigationsCard());
+      if (p.qrisk != null || p.tod || p.cvd || p.ckd || p.t2dm || p.t1dm){
+        // preview what would happen if confirmed
+        const prev = startDecision(p, cSt);
+        out.push({c:'grey', t:`If confirmed (provisional): ${prev.level}`, i: prev.i});
+      }
+    } else if (cSt >= 1 && hasAmb){
+      const aSt = ambStage(p.as, p.ad);
+      if (aSt === 0){
+        const i = [`${p.atype} average ${p.as}/${p.ad} is below 135/85 – hypertension <b>not confirmed</b> ${R('1.2.8')}`];
+        if ((p.cs - p.as) > 20 || (p.cd - p.ad) > 10) i.push(`White-coat effect (clinic exceeds out-of-clinic by &gt;20/10).`);
+        i.push(`Re-measure clinic BP at least every 5 years, more often as BP is raised ${R('1.2.10')}`);
+        i.push(`Offer healthy living advice ${R('1.2.11')}`);
+        if (p.t2dm) i.push(`Type 2 diabetes: measure BP at least annually ${R('1.2.12')}`);
+        if (p.tod) i.push(`Target organ damage without hypertension – consider investigating alternative causes ${R('1.2.9')}`);
+        out.push({c:'green', t:'Not hypertensive (white-coat pattern)', i});
+        pills.push(['green','Not confirmed']);
+      } else {
+        // NICE stage definitions require both clinic and ambulatory criteria
+        if (cSt === 3) confirmedStage = 3;
+        else confirmedStage = (cSt >= 2 && aSt >= 2) ? 2 : 1;
+        const i = [`Clinic ${p.cs}/${p.cd} and ${p.atype} ${p.as}/${p.ad} – diagnosis confirmed ${R('1.2.8')}`];
+        if (confirmedStage < 3 && cSt !== aSt) i.push(`Clinic and ${p.atype} fall in different stages – staged per NICE definitions (both criteria needed for stage 2). Use clinical judgement.`);
+        if ((p.cs - p.as) > 20 || (p.cd - p.ad) > 10) i.push(`White-coat effect present – consider ABPM/HBPM alongside clinic readings for monitoring ${R('1.4.18')}`);
+        out.push({c: confirmedStage >= 2 ? 'red' : 'amber', t: stageName(confirmedStage), i});
+        pills.push([confirmedStage >= 2 ? 'red' : 'amber', stageName(confirmedStage)]);
+      }
+    }
+
+    if (confirmedStage){
+      const dec = startDecision(p, confirmedStage);
+      out.push({c: dec.c, t:`Treatment: ${dec.level}`, i: dec.i});
+      pills.push([dec.c, dec.level]);
+      if (dec.treat) out.push({c:'amber', t:'Choosing a drug', i: step1(p)});
+      out.push(investigationsCard());
+      out.push(targetCard(p, tg, ps));
+    }
+    const pc = posturalCard(p, ps); if (pc) out.push(pc);
+    const mn = measurementNotes(p); if (mn) out.push(mn);
+    out.push(lifestyleCard(cSt >= 1));
+  } else {
+    // ---------- TREATMENT REVIEW ----------
+    let rs = p.cs, rd = p.cd, using = 'clinic', t = tg.clinic;
+    if (ps.sig && p.ss != null){ rs = p.ss; rd = p.sd; using = 'standing clinic'; }
+    if (hasAmb){
+      rs = p.as; rd = p.ad; using = p.atype;
+      t = tg.amb || [tg.clinic[0]-5, tg.clinic[1]-5];
+    }
+    const atTarget = below(rs, rd, t);
+    const tgtNote = (using === p.atype && !tg.amb) ? ' (clinic target − 5, approximation)' : '';
+    if (cSt === 3 && !redFlagRefer.length){
+      out.push({c:'red', t:'Severe hypertension on treatment', i:[
+        `Clinic BP ${p.cs}/${p.cd} – assess for target organ damage promptly and review within 7 days ${R('1.5.1')}`,
+        `Refer same day if retinal haemorrhage/papilloedema, life-threatening symptoms or suspected phaeochromocytoma ${R('1.5.2, 1.5.3')}`]});
+    }
+    if (atTarget){
+      out.push({c:'green', t:'At target – continue current treatment', i:[
+        `${using} BP ${rs}/${rd} is below target ${fmt(t)}${tgtNote}.`,
+        `Continue current regimen; annual review ${R('1.4.24')}`,
+        (p.bfz ? `On bendroflumethiazide/HCTZ with stable control – continue ${R('1.4.39')}` : null)
+      ].filter(Boolean)});
+      pills.push(['green','At target']);
+    } else {
+      out.push({c:'amber', t:'Above target', i:[`${using} BP ${rs}/${rd} vs target below ${fmt(t)}${tgtNote}.`]});
+      pills.push(['amber','Above target']);
+      nextStep(p).forEach(c => out.push(c));
+      if (p.bfz) out.push({c:'grey', t:'Diuretic choice', i:[`If changing diuretic, use a thiazide-like diuretic (e.g. indapamide) in preference to bendroflumethiazide/HCTZ ${R('1.4.38')}`]});
+    }
+    if (hasAmb && ((p.cs - p.as) > 20 || (p.cd - p.ad) > 10)) out.push({c:'grey', t:'White-coat effect', i:[`Clinic readings exceed ${p.atype} by &gt;20/10 – use ABPM/HBPM alongside clinic BP for monitoring ${R('1.4.18')}`]});
+    if (p.t2dm) out.push({c:'grey', t:'Type 2 diabetes', i:[`If T2DM newly diagnosed while on antihypertensives: change treatment only if control is poor or drugs are inappropriate due to microvascular/metabolic problems ${R('1.4.25')}`]});
+    out.push(targetCard(p, tg, ps));
+    const pc = posturalCard(p, ps); if (pc) out.push(pc);
+    const mn = measurementNotes(p); if (mn) out.push(mn);
+    out.push(lifestyleCard(true));
+  }
+  render(out, pills, p);
+}
+
+let lastText = '';
+let leafState = null;
+
+// ---------- patient leaflet page ----------
+function openLeaflet(){
+  if (leafState){
+    $('leafBP').textContent = leafState.bp;
+    $('leafClinic').textContent = leafState.clinic;
+    $('leafHome').textContent = leafState.home;
+  }
+  document.body.classList.add('leaflet-open');
+  $('leaflet').classList.remove('hidden');
+  window.scrollTo(0,0);
+}
+function closeLeaflet(){
+  document.body.classList.remove('leaflet-open');
+  $('leaflet').classList.add('hidden');
+}
+function leafText(){
+  const doc = $('leafDoc').cloneNode(true);
+  doc.querySelectorAll('.leaf-noprint').forEach(n => n.remove());
+  const lines = [];
+  doc.querySelectorAll('h1,h2,h3,p,li').forEach(n => {
+    const t = n.textContent.replace(/\s+/g,' ').trim();
+    if (!t) return;
+    if (n.tagName === 'H1') lines.push(t.toUpperCase(), '');
+    else if (n.tagName === 'H2') lines.push('', t.toUpperCase());
+    else if (n.tagName === 'H3') lines.push('', t);
+    else if (n.tagName === 'LI') lines.push('• ' + t);
+    else lines.push(t);
+  });
+  return lines.join('\n').replace(/\n{3,}/g,'\n\n');
+}
+async function copyText(txt, btn){
+  try { await navigator.clipboard.writeText(txt); }
+  catch(e){ const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
+  const o = btn.textContent; btn.textContent = 'Copied ✓'; setTimeout(() => btn.textContent = o, 1500);
+}
+document.addEventListener('click', e => {
+  if (e.target.closest('[data-open-leaflet]')) { e.preventDefault(); openLeaflet(); }
+  if (e.target.closest('[data-open-ref]')) { const d = $('lifestyleRef'); d.open = true; d.scrollIntoView({behavior:'smooth', block:'start'}); }
+});
+$('leafBack').addEventListener('click', closeLeaflet);
+$('leafCopy').addEventListener('click', e => copyText(leafText(), e.currentTarget));
+$('leafPrint').addEventListener('click', () => window.print());
+$('leafShare').addEventListener('click', async e => {
+  const text = leafText();
+  if (navigator.share){
+    try { await navigator.share({title:'High blood pressure: living well and lowering your numbers', text}); return; }
+    catch(err){ if (err && err.name === 'AbortError') return; }
+  }
+  copyText(text, e.currentTarget);
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.body.classList.contains('leaflet-open')) closeLeaflet(); });
+function render(out, pills, p, incomplete){
+  $('pills').innerHTML = pills.map(([c,t]) => `<span class="pill ${c}">${t}</span>`).join('');
+  let html = out.map(c => `<div class="card ${c.c}"><h3>${c.t}</h3><ul>${c.i.map(x=>`<li>${x}</li>`).join('')}</ul></div>`).join('');
+  if (incomplete) html += `<div class="empty">Enter age and clinic blood pressure to see the plan.</div>`;
+  $('out').innerHTML = html;
+  // plain text for notes
+  const strip = s => s.replace(/<button[^>]*>.*?<\/button>/g,'').replace(/<span class="ref">(.*?)<\/span>/g,' [NG136 $1]').replace(/<[^>]+>/g,'').replace(/&gt;/g,'>').replace(/&lt;/g,'<').replace(/&amp;/g,'&').replace(/\s+/g,' ').trim();
+  const head = [];
+  if (p && p.age!=null) head.push(`Age ${p.age}`);
+  if (p && p.cs!=null) head.push(`Clinic BP ${p.cs}/${p.cd}`);
+  if (p && p.as!=null) head.push(`${p.atype} ${p.as}/${p.ad}`);
+  if (p && p.qrisk!=null) head.push(`QRISK3 ${p.qrisk}%`);
+  lastText = `Hypertension plan (NICE NG136)\n${head.join(' | ')}\n\n` + out.map(c => `${strip(c.t).toUpperCase()}\n` + c.i.map(strip).filter(Boolean).map(x => `- ${x}`).join('\n')).join('\n\n');
+}
+
+$('copyBtn').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(lastText); }
+  catch(e){ const ta = document.createElement('textarea'); ta.value = lastText; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
+  const b = $('copyBtn'); const o = b.textContent; b.textContent = 'Copied ✓'; setTimeout(() => b.textContent = o, 1500);
+});
+$('resetBtn').addEventListener('click', () => {
+  document.querySelectorAll('#inputs input[type=number]').forEach(i => i.value = '');
+  document.querySelectorAll('#inputs input[type=checkbox]').forEach(i => i.checked = false);
+  document.querySelectorAll('#inputs select').forEach(s => s.selectedIndex = 0);
+  document.querySelector('input[name=mode][value=dx]').checked = true;
+  compute();
+});
+document.getElementById('inputs').addEventListener('input', compute);
+document.getElementById('inputs').addEventListener('change', compute);
+compute();
+
+// expose for testing
+window.__htn = {clinicStage, ambStage, getTargets, step1, nextStep, startDecision};
+})();
+</script>
+</body>
+</html>
