@@ -121,6 +121,24 @@ body.leaflet-open main, body.leaflet-open header{display:none}
   body.leaflet-open .leaf{border:0;padding:0;max-width:none}
   .leaf h2,.leaf h3{break-after:avoid} .leaf-box,.leaf-urgent,.leaf-warn{break-inside:avoid}
 }
+.drugtools{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+.drugtools input{flex:1 1 200px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);font-size:14px}
+.drugchips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.drugchips button{border:1px solid var(--line);background:var(--chip);color:var(--ink);border-radius:999px;padding:4px 10px;font-size:12.5px;cursor:pointer}
+.drugchips button[aria-pressed=true]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.drug{margin-bottom:6px}
+.drug summary{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.drug .dn{font-weight:700}.drug .dc{color:var(--muted);font-size:12.5px;font-weight:400}
+.drug .dtag{font-size:11px;font-weight:700;border-radius:5px;padding:1px 6px;background:var(--chip);color:var(--muted)}
+.drug .dose{margin:4px 0 8px;font-size:13.5px}
+.drug .dcols{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:640px){.drug .dcols{grid-template-columns:1fr}}
+.drug .dbox{border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13.5px}
+.drug .dbox h4{margin:0 0 4px;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.drug .dbox.ci{background:var(--red-bg)} .drug .dbox.ci h4{color:var(--red)}
+.drug .dbox ul{margin:0;padding-left:18px}.drug .dbox li{margin:2px 0}
+.drug .dmon{margin:8px 0 0;font-size:13px;color:var(--muted)}
+.drugdisc{font-size:12.5px;color:var(--muted);margin:0 0 8px}
 </style>
 <style>.site-back{display:inline-block;font:600 13px/1 -apple-system,"Segoe UI",Arial,sans-serif;color:inherit;opacity:.85;text-decoration:none;margin:10px 16px 0}.site-back:hover{opacity:1;text-decoration:underline}@media print{.site-back,.site-foot{display:none!important}}</style></head>
 <body>
@@ -290,6 +308,12 @@ body.leaflet-open main, body.leaflet-open header{display:none}
         <tr><td>–</td><td>Uncontrolled on optimal doses of 4 drugs → seek specialist advice</td></tr>
       </table>
       <p class="sub">A = ACEi or ARB (never both), C = CCB, D = thiazide-like diuretic.</p>
+    </div></details>
+    <details id="drugRef"><summary>Antihypertensive drugs – 20 commonly used (doses, side effects, contraindications)</summary><div class="inner">
+      <p class="drugdisc">Quick check when agreeing a plan or prescribing. Typical adult doses only; always confirm against the BNF, the SmPC and local formulary (prescribe modified-release preparations by brand).</p>
+      <div class="drugtools"><input id="drugQ" type="search" placeholder="Search drug or class…" aria-label="Search antihypertensive drugs"></div>
+      <div class="drugchips" id="drugChips" role="group" aria-label="Filter by class"></div>
+      <div id="drugList"></div>
     </div></details>
     <details><summary>Same-day referral</summary><div class="inner">
       <ul>
@@ -570,7 +594,7 @@ function pick(p){
     notes.push('Use with caution if there is gout or significant hypokalaemia.');
   }
   if (low) notes.push('Aged 80+: start at a low dose and titrate slowly; check for postural hypotension.');
-  return {cls, name, ex: cls==='A'? ex.A : ex[cls], why, notes};
+  return {cls, name, id:{A:'ramipril',Ar:'losartan',C:'amlodipine',D:'indapamide'}[cls], ex: cls==='A'? ex.A : ex[cls], why, notes};
 }
 
 // ---------- step 1 drug ----------
@@ -588,7 +612,7 @@ function step1(p){
   }
   const pk = pick(p);
   if (pk){
-    items.unshift(`<b>Recommended first-line for this patient: ${pk.name}</b> – e.g. ${pk.ex}. Reason: ${pk.why}. Example agents and starting doses are typical examples only – check the BNF/local formulary.`);
+    items.unshift(`<b>Recommended first-line for this patient: ${pk.name}</b> – e.g. ${pk.ex}. Reason: ${pk.why}. Example agents and starting doses are typical examples only – check the BNF/local formulary. <button class="btn ghost" type="button" data-open-drug="${pk.id}">View in drug reference</button>`);
     pk.notes.forEach(n=>items.push(n));
   }
   let drug, ref;
@@ -979,6 +1003,7 @@ async function copyText(txt, btn){
 }
 document.addEventListener('click', e => {
   if (e.target.closest('[data-open-leaflet]')) { e.preventDefault(); openLeaflet(); }
+  { const od = e.target.closest('[data-open-drug]'); if (od) { e.preventDefault(); openDrug(od.dataset.openDrug); } }
   if (e.target.closest('[data-open-ref]')) { const d = $('lifestyleRef'); d.open = true; d.scrollIntoView({behavior:'smooth', block:'start'}); }
 });
 $('leafBack').addEventListener('click', closeLeaflet);
@@ -1005,7 +1030,41 @@ function render(out, pills, p, incomplete){
   if (p && p.cs!=null) head.push(`Clinic BP ${p.cs}/${p.cd}`);
   if (p && p.as!=null) head.push(`${p.atype} ${p.as}/${p.ad}`);
   if (p && p.qrisk!=null) head.push(`QRISK3 ${p.qrisk}%`);
-  lastText = `Hypertension plan (NICE NG136)\n${head.join(' | ')}\n\n` + out.map(c => `${strip(c.t).toUpperCase()}\n` + c.i.map(strip).filter(Boolean).map(x => `- ${x}`).join('\n')).join('\n\n');
+  const clean = s => s.replace(/<button[^>]*>.*?<\/button>/g,'').replace(/<span class="ref">.*?<\/span>/g,'').replace(/<[^>]+>/g,'').replace(/&gt;/g,'>').replace(/&lt;/g,'<').replace(/&amp;/g,'&').replace(/\s+/g,' ').replace(/\s+([.,;])/g,'$1').trim();
+  const short = (s, n) => { s = clean(s); if (s.length <= n) return s; const cut = s.slice(0, n); const k = Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('; ')); return (k > 40 ? cut.slice(0, k) : cut.replace(/\s+\S*$/, '')).replace(/[.;]$/, '') + '…'; };
+  const MED = /treatment|choosing a drug|drug choice|regimen|optimise|resistant|diuretic choice/i;
+  const SKIP = /investigations|targets|lifestyle|healthy living|postural|measure|white-coat|type 2/i;
+  const imp = [], med = [];
+  let inv = null, tgt = null, life = false;
+  out.forEach(c => {
+    if (/investigations/i.test(c.t)) inv = c;
+    else if (/^targets/i.test(c.t)) tgt = c;
+    else if (/lifestyle|healthy living/i.test(c.t)) life = true;
+    else if (MED.test(c.t) && !/^above target/i.test(c.t)) med.push(c);
+    else if (!SKIP.test(c.t)) imp.push(clean(c.t));
+  });
+  const lines = [`Hypertension review${head.length ? ' – ' + head.join(', ') : ''}`];
+  if (imp.length) lines.push('Impression: ' + imp.join('; '));
+  const medBits = [];
+  med.forEach(c => {
+    c.i.forEach(x => {
+      const m = clean(x).match(/^Recommended first-line for this patient: (.*?) – e\.g\. (.*?)\. Reason: (.*?)\.(?: Example agents|$)/);
+      if (m) medBits.push(`start ${m[1]} (e.g. ${m[2]})`);
+    });
+    if (!medBits.length || !/^(start step 1|choosing|drug choice)/i.test(c.t)) {
+      const first = c.i.map(clean).find(x => x && !/^Recommended first-line|^Example agents/.test(x));
+      if (first && !/^(start step 1|choosing|drug choice)/i.test(c.t)) medBits.push(short(c.t.replace(/^Treatment: /,'') + ': ' + first, 170));
+      else if (first && !medBits.length) medBits.push(short(first, 170));
+    }
+  });
+  const starts = medBits.filter(x => /^start /.test(x));
+  if (medBits.length) lines.push('Medication: ' + (starts.length ? starts : medBits).join('; '));
+  else if (!imp.some(x => /refer|outside|pregnan/i.test(x))) lines.push('Medication: none started');
+  if (inv) lines.push('Investigations: urine ACR + dipstick, HbA1c, U&E/eGFR, lipids, fundoscopy, ECG, QRISK3');
+  if (tgt) lines.push('Target: ' + tgt.i.slice(0, 2).map(clean).map(x => x.replace(/ \(waking-hours average\)/,'').replace(/^Clinic target: /,'clinic ').replace(/^ABPM\/HBPM target: /,'ABPM/HBPM ')).join('; ').replace(/\.$/, ''));
+  if (life) lines.push('Lifestyle: advice and leaflet given');
+  if (tgt) lines.push('Review: annual BP/medication review');
+  lastText = lines.join('\n');
 }
 
 $('copyBtn').addEventListener('click', async () => {
@@ -1023,6 +1082,40 @@ $('resetBtn').addEventListener('click', () => {
 document.getElementById('inputs').addEventListener('input', compute);
 document.getElementById('inputs').addEventListener('change', compute);
 compute();
+
+
+// ---------- antihypertensive drug reference ----------
+const HTN_DRUGS = [{"id": "ramipril", "n": "Ramipril", "c": "ACE inhibitor", "g": "A", "tag": "Step 1/2 (A)", "dose": "Start 1.25–2.5 mg once daily; usual 2.5–5 mg; max 10 mg daily.", "se": ["Dry cough", "Dizziness / postural hypotension (esp. first dose)", "Hyperkalaemia and rise in creatinine"], "ci": ["History of angioedema", "Pregnancy / planning pregnancy – avoid", "Bilateral renal artery stenosis"], "mon": "U&E and eGFR before starting and 1–2 weeks after each dose increase. Switch to an ARB if cough troublesome. Never combine with an ARB."}, {"id": "lisinopril", "n": "Lisinopril", "c": "ACE inhibitor", "g": "A", "tag": "Step 1/2 (A)", "dose": "Start 10 mg once daily (2.5–5 mg if elderly, on a diuretic or renal impairment); usual 20 mg; max 80 mg.", "se": ["Dry cough", "Dizziness and headache", "Hyperkalaemia and raised creatinine"], "ci": ["History of angioedema", "Pregnancy / planning pregnancy – avoid", "Bilateral renal artery stenosis"], "mon": "U&E and eGFR at baseline and 1–2 weeks after changes. Accept creatinine rise up to 30% or eGFR fall up to 25%."}, {"id": "perindopril", "n": "Perindopril", "c": "ACE inhibitor", "g": "A", "tag": "Step 1/2 (A)", "dose": "Perindopril erbumine: start 4 mg once daily (2 mg if elderly); max 8 mg. Perindopril arginine doses differ (5 mg, max 10 mg) – check the salt.", "se": ["Dry cough", "Dizziness / hypotension", "Taste disturbance or headache"], "ci": ["History of angioedema", "Pregnancy / planning pregnancy – avoid", "Bilateral renal artery stenosis"], "mon": "U&E and eGFR at baseline and 1–2 weeks after changes. Prescribe the salt explicitly to avoid dose errors."}, {"id": "enalapril", "n": "Enalapril", "c": "ACE inhibitor", "g": "A", "tag": "Step 1/2 (A)", "dose": "Start 5 mg once daily (2.5 mg if on a diuretic, elderly or renal impairment); usual 10–20 mg; max 40 mg.", "se": ["Dry cough", "Dizziness / hypotension", "Hyperkalaemia and renal impairment"], "ci": ["History of angioedema", "Pregnancy / planning pregnancy – avoid", "Bilateral renal artery stenosis"], "mon": "U&E and eGFR at baseline and 1–2 weeks after changes. Twice-daily dosing is sometimes used; once-daily agents are generally preferred."}, {"id": "losartan", "n": "Losartan", "c": "Angiotensin-II receptor blocker", "g": "A", "tag": "Step 1/2 (A)", "dose": "Start 50 mg once daily (25 mg if volume-depleted or hepatic impairment); max 100 mg.", "se": ["Dizziness", "Hyperkalaemia", "Raised creatinine / reduced renal function"], "ci": ["Pregnancy – avoid", "Severe hepatic impairment", "Bilateral renal artery stenosis"], "mon": "U&E and eGFR at baseline and 1–2 weeks after changes. NICE: use an ARB rather than an ACE inhibitor in Black African/African–Caribbean patients needing an A-drug; also if ACEi cough."}, {"id": "candesartan", "n": "Candesartan", "c": "Angiotensin-II receptor blocker", "g": "A", "tag": "Step 1/2 (A)", "dose": "Start 8 mg once daily (4 mg if hepatic impairment or volume-depleted); max 32 mg.", "se": ["Dizziness", "Hyperkalaemia", "Raised creatinine / renal impairment"], "ci": ["Pregnancy – avoid", "Severe hepatic impairment or cholestasis", "Bilateral renal artery stenosis"], "mon": "U&E and eGFR at baseline and 1–2 weeks after changes."}, {"id": "irbesartan", "n": "Irbesartan", "c": "Angiotensin-II receptor blocker", "g": "A", "tag": "Step 1/2 (A)", "dose": "Start 150 mg once daily (75 mg if over 75 or on haemodialysis); max 300 mg.", "se": ["Dizziness", "Fatigue", "Hyperkalaemia"], "ci": ["Pregnancy – avoid", "Bilateral renal artery stenosis", "Aliskiren co-prescription in diabetes or eGFR below 60"], "mon": "U&E and eGFR at baseline and 1–2 weeks after changes."}, {"id": "valsartan", "n": "Valsartan", "c": "Angiotensin-II receptor blocker", "g": "A", "tag": "Step 1/2 (A)", "dose": "Start 80 mg once daily; usual max 160 mg (SmPC allows up to 320 mg).", "se": ["Dizziness", "Headache", "Hyperkalaemia / renal impairment"], "ci": ["Pregnancy – avoid", "Severe hepatic impairment, cirrhosis or cholestasis", "Bilateral renal artery stenosis"], "mon": "U&E and eGFR at baseline and 1–2 weeks after changes. Do not combine with sacubitril/valsartan."}, {"id": "amlodipine", "n": "Amlodipine", "c": "Calcium-channel blocker (dihydropyridine)", "g": "C", "tag": "Step 1/2 (C)", "dose": "Start 5 mg once daily; max 10 mg (consider 2.5 mg in frail or hepatic impairment).", "se": ["Ankle swelling (peripheral oedema)", "Flushing and headache", "Dizziness or palpitations"], "ci": ["Severe hypotension / cardiogenic shock", "Severe aortic stenosis", "Unstable angina"], "mon": "If oedema is troublesome, consider a thiazide-like diuretic. Interacts with simvastatin (limit simvastatin to 20 mg)."}, {"id": "felodipine", "n": "Felodipine (MR)", "c": "Calcium-channel blocker (dihydropyridine)", "g": "C", "tag": "Step 1/2 (C)", "dose": "Start 5 mg once daily (2.5 mg if elderly); max 10 mg.", "se": ["Ankle oedema", "Flushing and headache", "Dizziness or palpitations"], "ci": ["Unstable angina or MI within the last month", "Haemodynamically significant valvular obstruction", "Uncontrolled heart failure; avoid in pregnancy"], "mon": "Avoid grapefruit juice (raises levels). Modified-release: do not crush."}, {"id": "lercanidipine", "n": "Lercanidipine", "c": "Calcium-channel blocker (dihydropyridine)", "g": "C", "tag": "Step 1/2 (C)", "dose": "Start 10 mg once daily; max 20 mg. Take before food.", "se": ["Headache", "Peripheral oedema (often less than amlodipine)", "Flushing or palpitations"], "ci": ["Unstable angina or MI within the last month", "Uncontrolled heart failure or LV outflow obstruction", "Severe hepatic or renal impairment (eGFR below 30)"], "mon": "Avoid grapefruit juice and strong CYP3A4 inhibitors (e.g. clarithromycin, itraconazole)."}, {"id": "nifedipine", "n": "Nifedipine (MR)", "c": "Calcium-channel blocker (dihydropyridine)", "g": "C", "tag": "Step 1/2 (C)", "dose": "Modified-release once-daily brands: start 30 mg daily; max about 90 mg (brand-dependent – prescribe by brand).", "se": ["Headache", "Flushing", "Ankle oedema"], "ci": ["Cardiogenic shock or significant aortic stenosis", "Unstable angina", "MI within the last month"], "mon": "Avoid grapefruit juice. Do not use short-acting capsules for hypertension."}, {"id": "diltiazem", "n": "Diltiazem (MR)", "c": "Calcium-channel blocker (rate-limiting)", "g": "C", "tag": "Alternative C", "dose": "Brand-dependent: e.g. 90–120 mg twice daily or 200–300 mg once daily; max 480 mg daily. Prescribe by brand.", "se": ["Ankle oedema", "Headache and dizziness", "Bradycardia"], "ci": ["Bradycardia, sick sinus syndrome or 2nd/3rd-degree AV block", "Left ventricular failure with pulmonary congestion", "Caution with beta-blockers (verapamil + beta-blocker contraindicated)"], "mon": "Raises simvastatin and atorvastatin levels (limit simvastatin to 10 mg). Used when a dihydropyridine is unsuitable."}, {"id": "indapamide", "n": "Indapamide", "c": "Thiazide-like diuretic", "g": "D", "tag": "Step 1/2/3 (D)", "dose": "2.5 mg once daily, or modified-release 1.5 mg once daily (NICE-preferred thiazide-like agent).", "se": ["Hyponatraemia", "Hypokalaemia", "Dizziness / postural hypotension; hyperuricaemia (gout)"], "ci": ["Refractory hypokalaemia", "Severe renal impairment or anuria", "Severe hepatic impairment or hepatic encephalopathy"], "mon": "Check Na, K and renal function before and 1–2 weeks after starting; hyponatraemia more likely in older people. Caution with gout."}, {"id": "bendroflumethiazide", "n": "Bendroflumethiazide", "c": "Thiazide diuretic", "g": "D", "tag": "Not preferred (D)", "dose": "2.5 mg each morning; higher doses add little BP effect but more metabolic effects.", "se": ["Hyponatraemia and hypokalaemia", "Hyperuricaemia / gout", "Erectile dysfunction and raised glucose"], "ci": ["Refractory hypokalaemia or hyponatraemia", "Hypercalcaemia", "Symptomatic hyperuricaemia (gout) or Addison’s disease"], "mon": "NICE prefers indapamide or chlortalidone over conventional thiazides such as bendroflumethiazide for new starts. Check U&E at 1–2 weeks."}, {"id": "chlortalidone", "n": "Chlortalidone", "c": "Thiazide-like diuretic", "g": "D", "tag": "Step 1/2/3 (D)", "dose": "Start 12.5–25 mg once daily (morning); max 50 mg.", "se": ["Hypokalaemia", "Hyponatraemia", "Hyperuricaemia / gout (and raised glucose)"], "ci": ["Refractory hypokalaemia or hyponatraemia", "Hypercalcaemia", "Severe renal impairment or anuria"], "mon": "Check Na, K and renal function before and 1–2 weeks after starting. Availability can vary – check local supply."}, {"id": "bisoprolol", "n": "Bisoprolol", "c": "Beta-blocker (cardioselective)", "g": "O", "tag": "Other (not routine)", "dose": "Start 5 mg once daily; usual 10 mg; max 20 mg.", "se": ["Bradycardia", "Fatigue and cold extremities", "Dizziness or sleep disturbance"], "ci": ["2nd/3rd-degree AV block, sick sinus syndrome or severe bradycardia", "Asthma or significant bronchospasm (caution in COPD)", "Acute/decompensated heart failure, cardiogenic shock or severe hypotension"], "mon": "Not routine first-line for hypertension; used for specific indications (angina, post-MI, heart failure, AF) or at step 4 if K⁺ above 4.5. Do not stop abruptly."}, {"id": "atenolol", "n": "Atenolol", "c": "Beta-blocker", "g": "O", "tag": "Other (not routine)", "dose": "Start 25–50 mg once daily; max 100 mg. Reduce dose in renal impairment (eGFR below 35).", "se": ["Bradycardia", "Cold extremities and fatigue", "Sleep disturbance or reduced exercise tolerance"], "ci": ["2nd/3rd-degree AV block, sick sinus syndrome", "Asthma or history of bronchospasm", "Severe peripheral arterial disease, cardiogenic shock or untreated phaeochromocytoma"], "mon": "Renally cleared. Not routinely recommended for new hypertension. Do not stop abruptly."}, {"id": "doxazosin", "n": "Doxazosin", "c": "Alpha-blocker", "g": "O", "tag": "Step 4 option (K⁺ >4.5)", "dose": "Start 1 mg once daily (at bedtime), titrate at 1–2 week intervals; usual 2–4 mg; max 16 mg (immediate-release).", "se": ["Dizziness and postural hypotension (first-dose effect)", "Headache and fatigue", "Peripheral oedema"], "ci": ["History of postural hypotension", "Hypersensitivity to quinazolines", "Caution: cataract surgery (floppy iris syndrome)"], "mon": "Warn about first-dose syncope; take at bedtime and rise slowly. Check lying/standing BP."}, {"id": "spironolactone", "n": "Spironolactone", "c": "Potassium-sparing diuretic (MRA)", "g": "O", "tag": "Step 4 option (K⁺ ≤4.5)", "dose": "Resistant hypertension: 25 mg once daily (12.5 mg may be used if frail or reduced eGFR).", "se": ["Hyperkalaemia", "Gynaecomastia or breast tenderness", "Hyponatraemia / renal impairment"], "ci": ["Hyperkalaemia (do not start if K⁺ above 4.5)", "Addison’s disease", "Severe renal impairment (eGFR below 30) – specialist advice"], "mon": "Check Na, K and renal function within 1 month of starting, then as appropriate. Higher risk of hyperkalaemia with ACEi/ARB."}];
+const GROUPS = {All:'All', A:'ACEi / ARB (A)', C:'CCB (C)', D:'Diuretics (D)', O:'Other'};
+let drugGroup = 'All';
+function escD(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+function renderDrugChips(){
+  $('drugChips').innerHTML = Object.keys(GROUPS).map(k => `<button type="button" aria-pressed="${k===drugGroup}" data-g="${k}">${GROUPS[k]}</button>`).join('');
+}
+function renderDrugs(openId){
+  const q = $('drugQ').value.trim().toLowerCase();
+  const rows = HTN_DRUGS.filter(d => (drugGroup==='All'||d.g===drugGroup) && (!q || (d.n+' '+d.c+' '+d.tag).toLowerCase().includes(q)));
+  $('drugList').innerHTML = rows.length ? rows.map(d => `
+    <details class="drug" id="drug-${d.id}"${d.id===openId?' open':''}>
+      <summary><span class="dn">${escD(d.n)}</span><span class="dc">${escD(d.c)}</span><span class="dtag">${escD(d.tag)}</span></summary>
+      <div class="inner">
+        <p class="dose"><b>Typical adult dose:</b> ${escD(d.dose)}</p>
+        <div class="dcols">
+          <div class="dbox"><h4>3 common side effects</h4><ul>${d.se.map(x=>`<li>${escD(x)}</li>`).join('')}</ul></div>
+          <div class="dbox ci"><h4>Contraindications / key cautions</h4><ul>${d.ci.map(x=>`<li>${escD(x)}</li>`).join('')}</ul></div>
+        </div>
+        <p class="dmon"><b>Monitoring / notes:</b> ${escD(d.mon)}</p>
+      </div>
+    </details>`).join('') : '<p class="drugdisc">No drugs match.</p>';
+}
+$('drugQ').addEventListener('input', () => renderDrugs());
+$('drugChips').addEventListener('click', e => { const b = e.target.closest('button[data-g]'); if (!b) return; drugGroup = b.dataset.g; renderDrugChips(); renderDrugs(); });
+function openDrug(id){
+  drugGroup = 'All'; $('drugQ').value = ''; renderDrugChips(); renderDrugs(id);
+  $('drugRef').open = true;
+  const el = $('drug-'+id); if (el) el.scrollIntoView({behavior:'smooth', block:'center'});
+}
+renderDrugChips(); renderDrugs();
 
 // expose for testing
 window.__htn = {clinicStage, ambStage, getTargets, step1, nextStep, startDecision};
