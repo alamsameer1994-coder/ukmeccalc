@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NICE Hypertension Calculator</title>
+<title>NICE Hypertension Calculator | GPCalc</title>
 <style>
 :root{
   --bg:#f5f7fa; --panel:#ffffff; --ink:#1b2430; --muted:#5b6777; --line:#dfe4ea;
@@ -127,7 +127,7 @@ body.leaflet-open main, body.leaflet-open header{display:none}
 <header>
   <div class="wrap">
     <div>
-      <a class="site-back" style="margin:0 0 6px" href="/">← All calculators</a>
+      <a class="site-back" style="margin:0 0 6px" href="/">← GPCalc</a>
       <h1>NICE Hypertension Calculator</h1>
       <p>Adults ≥18 · NICE NG136 Hypertension in adults: diagnosis and management (last updated 26 Feb 2026)</p>
     </div>
@@ -317,7 +317,7 @@ body.leaflet-open main, body.leaflet-open header{display:none}
 </main>
 <footer class="site-foot" style="max-width:1180px;margin:8px auto 0;padding:16px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;line-height:1.6;text-align:center">
   <strong>For clinical reference only.</strong> Does not replace clinical judgement; verify against <a href="https://www.nice.org.uk/guidance/ng136" target="_blank" rel="noopener" style="color:var(--accent)">NICE NG136</a>.<br>
-  © 2026 Sameer Alam · <a href="/" style="color:var(--accent)">All calculators</a> · <a href="mailto:alam.sameer1994@gmail.com?subject=Hypertension%20calculator%20feedback" style="color:var(--accent)">Report an issue or suggest a correction</a>
+  © 2026 Sameer Alam · <a href="/" style="color:var(--accent)">GPCalc home</a> · <a href="/medications/" style="color:var(--accent)">Medications reference</a> · <a href="mailto:alam.sameer1994@gmail.com?subject=Hypertension%20calculator%20feedback" style="color:var(--accent)">Report an issue or suggest a correction</a>
 </footer>
 
 <!-- ================= PATIENT LEAFLET (separate page) ================= -->
@@ -536,6 +536,43 @@ function postural(p){
   return {indicated, drop, sig};
 }
 
+// ---------- specific first-line pick ----------
+function art(n){ return /^[aeiou]/i.test(n) ? 'an' : 'a'; }
+function pick(p){
+  if (p.preg) return null;
+  const ex = {A:'ramipril 2.5 mg once daily (or lisinopril 10 mg)', Ar:'losartan 50 mg once daily', C:'amlodipine 5 mg once daily', D:'indapamide MR 1.5 mg once daily'};
+  const low = p.age!=null && p.age>=80;
+  let cls, why;
+  if (p.hf){ cls='D'; why='heart failure'; }
+  else if (p.t2dm){
+    if (p.black){ cls='Ar'; why='type 2 diabetes, Black African/African–Caribbean origin (ARB preferred over ACEi)'; }
+    else if (p.aceCough){ cls='Ar'; why='type 2 diabetes, ACEi not tolerated'; }
+    else { cls='A'; why='type 2 diabetes'; }
+  } else if (p.black){
+    if (p.ccbOed){ cls='D'; why='Black African/African–Caribbean origin, CCB not tolerated'; }
+    else { cls='C'; why='Black African/African–Caribbean origin'; }
+  } else if (p.age!=null && p.age<55){
+    if (p.aceCough){ cls='Ar'; why='aged under 55, ACEi not tolerated'; } else { cls='A'; why='aged under 55'; }
+  } else {
+    if (p.ccbOed){ cls='D'; why='aged 55+, CCB not tolerated'; } else { cls='C'; why='aged 55 or over'; }
+  }
+  const name = {A:'ACE inhibitor (or ARB)', Ar:'ARB', C:'calcium-channel blocker', D:'thiazide-like diuretic'}[cls];
+  const notes = [];
+  if (cls==='A'||cls==='Ar'){
+    notes.push('Check U&amp;E/eGFR and potassium before starting and 1–2 weeks after starting or increasing the dose; accept a creatinine rise up to 30% / eGFR fall up to 25%.');
+    if (p.sex==='f' && p.age!=null && p.age<50) notes.push('Woman of child-bearing age: ACEi/ARB are teratogenic – check pregnancy intention and contraception before prescribing.');
+    if (p.egfr!=null && p.egfr<30) notes.push(`eGFR ${p.egfr}: specialist input advised before starting an ACEi/ARB.`);
+    if (cls==='A') notes.push('If a dry cough develops, switch to an ARB.');
+  }
+  if (cls==='C') notes.push('Common effects: ankle swelling, flushing, headache. If oedema is troublesome, use a thiazide-like diuretic.');
+  if (cls==='D'){
+    notes.push('Check sodium, potassium and renal function before and 1–2 weeks after starting; hyponatraemia is more likely in older people.');
+    notes.push('Use with caution if there is gout or significant hypokalaemia.');
+  }
+  if (low) notes.push('Aged 80+: start at a low dose and titrate slowly; check for postural hypotension.');
+  return {cls, name, ex: cls==='A'? ex.A : ex[cls], why, notes};
+}
+
 // ---------- step 1 drug ----------
 function step1(p){
   const items = [];
@@ -548,6 +585,11 @@ function step1(p){
   if (p.t1dm) items.push(`Type 1 diabetes: see NICE NG17 for drug choice.`);
   if (p.hf){
     items.push(`<b>Heart failure:</b> offer a <b>thiazide-like diuretic</b> (e.g. indapamide) and follow NICE NG106 ${R('1.4.37')}`);
+  }
+  const pk = pick(p);
+  if (pk){
+    items.unshift(`<b>Recommended first-line for this patient: ${pk.name}</b> – e.g. ${pk.ex}. Reason: ${pk.why}. Example agents and starting doses are typical examples only – check the BNF/local formulary.`);
+    pk.notes.forEach(n=>items.push(n));
   }
   let drug, ref;
   if (p.t2dm){
@@ -575,7 +617,7 @@ function nextStep(p){
   const A = p.ace || p.arb, C = p.ccb, D = p.thz || p.bfz;
   const n = (A?1:0) + (C?1:0) + (D?1:0);
   const extra = p.spiro || p.alpha || p.beta;
-  const aWord = p.black && !p.t2dm ? 'an <b>ARB</b> (preferred over ACEi)' : (p.aceCough ? 'an <b>ARB</b>' : 'an <b>ACE inhibitor or ARB</b>');
+  const aWord = p.black && !p.t2dm ? 'an <b>ARB</b> (preferred over ACEi in Black African/African–Caribbean patients, e.g. losartan)' : (p.aceCough ? 'an <b>ARB</b> (e.g. losartan)' : 'an <b>ACE inhibitor or ARB</b> (e.g. ramipril or losartan)');
   const pre = [];
   if (!p.adherent) pre.push(`Discuss whether medicines are being taken as prescribed and support adherence before stepping up ${R('1.4.40')}`);
 
@@ -647,7 +689,8 @@ function startDecision(p, stage){
   const fr = p.frail ? ` Use clinical judgement given frailty/multimorbidity ${R('NG56')}.` : '';
   if (stage >= 2){
     level = 'Offer drug treatment';
-    i.push(`<b>Offer antihypertensive drug treatment</b> plus lifestyle advice (stage 2 – any age) ${R('1.4.9')}.${fr}`);
+    const pk0 = pick(p);
+    i.push(`<b>Offer antihypertensive drug treatment${pk0?': start with '+art(pk0.name)+' '+pk0.name.replace(/^an? /,''):''}</b> plus lifestyle advice (stage 2 – any age) ${R('1.4.9')}.${fr}`);
   } else if (stage === 1){
     if (p.age < 80){
       const reasons = [];
@@ -658,7 +701,7 @@ function startDecision(p, stage){
       if (p.qrisk != null && p.qrisk >= 10) reasons.push(`QRISK ${p.qrisk}% (≥10%)`);
       if (reasons.length){
         level = 'Discuss drug treatment';
-        i.push(`<b>Discuss starting antihypertensive drug treatment</b> plus lifestyle advice – stage 1, under 80 with: ${reasons.join(', ')} ${R('1.4.10')}.${fr}`);
+        i.push(`<b>Discuss starting antihypertensive drug treatment${(pick(p)?' ('+pick(p).name+' first-line)':'')}</b> plus lifestyle advice – stage 1, under 80 with: ${reasons.join(', ')} ${R('1.4.10')}.${fr}`);
       } else if (p.qrisk == null){
         level = 'QRISK needed';
         c = 'blue';
@@ -666,7 +709,7 @@ function startDecision(p, stage){
         if (p.age < 60) i.push(`If under 60 with QRISK &lt;10%, still <b>consider</b> drug treatment – 10-year risk may underestimate lifetime risk ${R('1.4.12')}`);
       } else if (p.age < 60){
         level = 'Consider drug treatment';
-        i.push(`<b>Consider</b> antihypertensive drug treatment plus lifestyle advice: under 60 with QRISK &lt;10% – 10-year risk may underestimate lifetime risk ${R('1.4.12')}`);
+        i.push(`<b>Consider</b> antihypertensive drug treatment${(pick(p)?' ('+pick(p).name+' first-line)':'')} plus lifestyle advice: under 60 with QRISK &lt;10% – 10-year risk may underestimate lifetime risk ${R('1.4.12')}`);
       } else {
         level = 'Lifestyle + annual review';
         c = 'green';
@@ -675,7 +718,7 @@ function startDecision(p, stage){
     } else {
       if ((p.cs!=null && p.cs > 150) || (p.cd!=null && p.cd > 90)){
         level = 'Consider drug treatment';
-        i.push(`<b>Consider</b> antihypertensive drug treatment plus lifestyle advice: aged 80+ with stage 1 and clinic BP over 150/90 ${R('1.4.13')}.${fr}`);
+        i.push(`<b>Consider</b> antihypertensive drug treatment${(pick(p)?' ('+pick(p).name+' first-line)':'')} plus lifestyle advice: aged 80+ with stage 1 and clinic BP over 150/90 ${R('1.4.13')}.${fr}`);
       } else {
         level = 'Lifestyle + annual review';
         c = 'green';
