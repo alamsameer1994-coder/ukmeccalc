@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Medications Reference | GPCalc</title>
+<meta name="description" content="Quick reference for 20 commonly prescribed medicines in UK primary care: common side effects and key contraindications or cautions.">
+<style>
+:root{
+  --bg:#f5f7fa; --panel:#ffffff; --ink:#1b2430; --muted:#5b6777; --line:#dfe4ea;
+  --accent:#005eb8; --accent-ink:#ffffff; --chip:#eef2f7;
+  --red:#c62828; --red-bg:#fdecec; --amber:#b26a00; --amber-bg:#fff4e0;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#11161c; --panel:#1a2129; --ink:#e6ebf0; --muted:#9aa7b4; --line:#2c3642;
+    --accent:#4c9be8; --accent-ink:#0b1320; --chip:#26303b;
+    --red:#ff7b72; --red-bg:#3a1d1d; --amber:#f0b25a; --amber-bg:#3a2d16;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+header{background:var(--accent);color:var(--accent-ink);padding:18px 16px 16px}
+.wrap{max-width:900px;margin:0 auto}
+header a{color:inherit;font-weight:600;font-size:13px;text-decoration:none;opacity:.9}
+header a:hover{text-decoration:underline}
+header h1{margin:6px 0 2px;font-size:22px;letter-spacing:-.01em}
+header p{margin:0;font-size:13px;opacity:.92}
+main{max-width:900px;margin:0 auto;padding:16px}
+.disclaimer{background:var(--amber-bg);color:var(--ink);border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:8px;padding:10px 12px;font-size:13px;margin:0 0 14px}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.tools input{flex:1 1 220px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);font-size:15px}
+.tools button{padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);font-size:13px;cursor:pointer}
+.tools button:hover{border-color:var(--accent)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.chip{border:1px solid var(--line);background:var(--chip);color:var(--ink);border-radius:999px;padding:5px 11px;font-size:12.5px;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+details{background:var(--panel);border:1px solid var(--line);border-radius:10px;margin:0 0 8px;overflow:hidden}
+summary{cursor:pointer;padding:12px 14px;list-style:none;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"▸";color:var(--accent);font-size:12px;transition:transform .15s}
+details[open] summary::before{transform:rotate(90deg)}
+summary .n{font-weight:700;font-size:16px}
+summary .c{color:var(--muted);font-size:13px}
+.body{padding:2px 14px 14px;border-top:1px solid var(--line)}
+.use{color:var(--muted);font-size:13.5px;margin:10px 0}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:640px){.cols{grid-template-columns:1fr}}
+.box{border-radius:8px;padding:10px 12px;border:1px solid var(--line)}
+.box h3{margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.box ul{margin:0;padding-left:18px}
+.box li{margin:3px 0;font-size:14px}
+.se{background:var(--chip)} .se h3{color:var(--muted)}
+.ci{background:var(--red-bg)} .ci h3{color:var(--red)}
+.note{margin:10px 0 0;font-size:13px;color:var(--muted)}
+.empty{color:var(--muted);text-align:center;padding:24px}
+footer{max-width:900px;margin:8px auto 0;padding:16px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;line-height:1.6;text-align:center}
+footer a{color:var(--accent)}
+@media print{header a,.tools,.chips{display:none}details{break-inside:avoid}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <a href="/">← GPCalc</a>
+  <h1>Medications reference</h1>
+  <p>20 commonly prescribed medicines in UK primary care: common side effects and key contraindications or cautions</p>
+</div></header>
+<main>
+  <p class="disclaimer"><b>Quick reference only.</b> These are brief summaries, not complete lists. This is a curated selection of commonly prescribed drugs, not an official ranking. Always check the current <a href="https://bnf.nice.org.uk" target="_blank" rel="noopener" style="color:var(--accent)">BNF</a> or the product's <a href="https://www.medicines.org.uk/emc" target="_blank" rel="noopener" style="color:var(--accent)">SmPC</a> before prescribing, including doses, interactions and renal or hepatic adjustments.</p>
+  <div class="tools">
+    <input id="q" type="search" placeholder="Search by drug, class or use…" aria-label="Search medications">
+    <button id="expand" type="button">Expand all</button>
+    <button id="collapse" type="button">Collapse all</button>
+  </div>
+  <div class="chips" id="chips" role="group" aria-label="Filter by area"></div>
+  <div id="list"></div>
+</main>
+<footer>
+  © 2026 Sameer Alam · <a href="/">GPCalc home</a> ·
+  <a href="mailto:alam.sameer1994@gmail.com?subject=GPCalc%20medications%20reference%20feedback">Report an error or suggest a drug</a> ·
+  <a href="https://paypal.me/Alamsameer1994" target="_blank" rel="noopener">Support GPCalc</a>
+</footer>
+<script>
+const DRUGS = [
+ {n:"Amlodipine", c:"Calcium-channel blocker", a:"Cardiovascular", u:"Hypertension, angina",
+  se:["Ankle swelling (peripheral oedema)","Flushing and headache","Dizziness or palpitations"],
+  ci:["Severe hypotension or cardiogenic shock","Severe aortic stenosis","Unstable angina (and caution in heart failure or hepatic impairment)"]},
+ {n:"Ramipril", c:"ACE inhibitor", a:"Cardiovascular", u:"Hypertension, heart failure, post-MI, CKD with proteinuria",
+  se:["Persistent dry cough","Dizziness and postural hypotension","Hyperkalaemia and a rise in creatinine"],
+  ci:["History of angioedema (including with an ACE inhibitor)","Pregnancy – avoid (teratogenic)","Bilateral renal artery stenosis"],
+  note:"Check U&E and eGFR before starting and 1–2 weeks after starting or increasing the dose. Switch to an ARB if cough is troublesome."},
+ {n:"Losartan", c:"Angiotensin-II receptor blocker (ARB)", a:"Cardiovascular", u:"Hypertension, heart failure, diabetic nephropathy",
+  se:["Dizziness","Hyperkalaemia","Raised creatinine or reduced renal function"],
+  ci:["Pregnancy – avoid (teratogenic)","Severe hepatic impairment","Bilateral renal artery stenosis"],
+  note:"Do not combine an ACE inhibitor with an ARB for hypertension. Monitor U&E as for ACE inhibitors."},
+ {n:"Indapamide", c:"Thiazide-like diuretic", a:"Cardiovascular", u:"Hypertension",
+  se:["Hyponatraemia","Hypokalaemia","Dizziness or postural hypotension (also hyperuricaemia and gout)"],
+  ci:["Refractory hypokalaemia","Severe renal impairment or anuria","Severe hepatic impairment or hepatic encephalopathy"],
+  note:"Check sodium, potassium and renal function 1–2 weeks after starting. Hyponatraemia is more likely in older people."},
+ {n:"Bisoprolol", c:"Beta-blocker (cardioselective)", a:"Cardiovascular", u:"Heart failure, angina, rate control in AF, hypertension",
+  se:["Bradycardia","Fatigue and cold extremities","Dizziness or sleep disturbance"],
+  ci:["Second- or third-degree AV block, sick sinus syndrome or severe bradycardia","Asthma or a history of significant bronchospasm (caution in COPD)","Acute or decompensated heart failure, cardiogenic shock or severe hypotension"],
+  note:"Do not stop abruptly in ischaemic heart disease. Severe peripheral arterial disease: use with caution."},
+ {n:"Atorvastatin", c:"Statin (HMG-CoA reductase inhibitor)", a:"Cardiovascular", u:"Primary and secondary prevention of cardiovascular disease",
+  se:["Myalgia (report unexplained muscle pain or weakness)","Headache","Gastrointestinal upset, e.g. diarrhoea or nausea"],
+  ci:["Active liver disease or unexplained persistently raised transaminases","Pregnancy and breastfeeding","Interacting drugs, e.g. clarithromycin or erythromycin – avoid or suspend the statin"],
+  note:"Baseline LFTs and lipids; recheck LFTs at 3 and 12 months. Stop and check CK if severe muscle symptoms."},
+ {n:"Apixaban", c:"Direct oral anticoagulant (factor Xa inhibitor)", a:"Cardiovascular", u:"Stroke prevention in AF, treatment and prevention of VTE",
+  se:["Bleeding, including epistaxis, gastrointestinal or urinary tract bleeding","Bruising","Anaemia or nausea"],
+  ci:["Active clinically significant bleeding or a lesion at high risk of major bleeding","Hepatic disease with coagulopathy and clinically relevant bleeding risk","Strong CYP3A4 and P-gp inhibitors or inducers, e.g. ketoconazole, ritonavir, rifampicin (avoid)"],
+  note:"Not recommended if CrCl is below 15 mL/min, in pregnancy, or with mechanical heart valves. Dose reduction criteria apply in AF (age, weight, creatinine)."},
+ {n:"Aspirin 75 mg", c:"Antiplatelet", a:"Cardiovascular", u:"Secondary prevention of cardiovascular disease",
+  se:["Dyspepsia and gastrointestinal upset","Gastrointestinal bleeding","Bruising and bleeding at other sites"],
+  ci:["Active peptic ulcer or gastrointestinal bleeding","Aspirin or NSAID hypersensitivity, including aspirin-induced bronchospasm","Children under 16 (Reye's syndrome) and bleeding disorders"],
+  note:"Consider gastroprotection with a PPI in patients at higher risk of gastrointestinal bleeding."},
+ {n:"Furosemide", c:"Loop diuretic", a:"Cardiovascular", u:"Oedema, heart failure",
+  se:["Dehydration, hypotension and dizziness","Hypokalaemia and hyponatraemia","Raised urea or creatinine (acute kidney injury)"],
+  ci:["Hypovolaemia or dehydration","Severe hypokalaemia or hyponatraemia","Anuric renal failure or hepatic precoma"],
+  note:"May worsen gout. Take sick-day guidance into account (withhold during dehydrating illness)."},
+ {n:"Metformin", c:"Biguanide", a:"Endocrine", u:"Type 2 diabetes",
+  se:["Gastrointestinal upset: nausea, diarrhoea, abdominal pain","Metallic taste and reduced appetite","Vitamin B12 deficiency with long-term use"],
+  ci:["eGFR below 30 mL/min (review dose if below 45)","Acute illness with dehydration, sepsis or hypoxia (sick-day rules) – lactic acidosis risk","Excess alcohol intake or severe hepatic impairment"],
+  note:"Use modified-release if gastrointestinal effects are troublesome. Withhold around iodinated contrast if renal function is reduced."},
+ {n:"Levothyroxine", c:"Thyroid hormone", a:"Endocrine", u:"Hypothyroidism",
+  se:["Palpitations, tachycardia or AF (over-replacement)","Headache, tremor or anxiety","Weight loss, sweating or diarrhoea (over-replacement)"],
+  ci:["Untreated thyrotoxicosis","Untreated adrenal insufficiency – replace corticosteroid first","Cardiac disease, especially angina or ischaemic heart disease (caution – start low and titrate slowly)"],
+  note:"Take on an empty stomach and separate from iron and calcium by about 4 hours. Check TSH 6–8 weeks after any dose change."},
+ {n:"Omeprazole", c:"Proton pump inhibitor", a:"Gastrointestinal", u:"Dyspepsia, GORD, peptic ulcer, gastroprotection",
+  se:["Headache","Gastrointestinal upset: diarrhoea, constipation, abdominal pain, nausea","Long-term: hypomagnesaemia, vitamin B12 deficiency, increased fracture risk"],
+  ci:["Hypersensitivity to PPIs","Alarm symptoms – exclude gastric malignancy before treating","Avoid with clopidogrel (reduced antiplatelet effect)"],
+  note:"Review the need for long-term PPI use regularly. Increases the risk of Clostridioides difficile infection."},
+ {n:"Sertraline", c:"SSRI antidepressant", a:"Mental health", u:"Depression, anxiety disorders, OCD, PTSD",
+  se:["Nausea and diarrhoea","Headache and sleep disturbance","Sexual dysfunction"],
+  ci:["Current or recent MAOI (within 14 days), linezolid or pimozide","Unstable epilepsy","Manic phase"],
+  note:"Increased bleeding risk, especially with NSAIDs or anticoagulants. Hyponatraemia is more likely in older people. Taper to stop."},
+ {n:"Amitriptyline", c:"Tricyclic antidepressant", a:"Mental health", u:"Neuropathic pain, migraine prophylaxis, depression",
+  se:["Dry mouth","Drowsiness or sedation","Constipation (also blurred vision, urinary retention, weight gain)"],
+  ci:["Recent myocardial infarction, arrhythmias or heart block","Manic phase","Severe liver disease"],
+  note:"Dangerous in overdose (cardiotoxic) – prescribe limited quantities where there is a risk of self-harm. Caution in glaucoma and urinary retention."},
+ {n:"Gabapentin", c:"Gabapentinoid", a:"Pain and neurology", u:"Neuropathic pain, epilepsy",
+  se:["Drowsiness and dizziness","Ataxia and fatigue","Peripheral oedema and weight gain"],
+  ci:["Hypersensitivity (no other absolute contraindication)","Caution: risk of respiratory depression with opioids or other CNS depressants, or in respiratory disease or older people","Caution: reduce the dose in renal impairment; risk of misuse and dependence (Class C) – withdraw gradually"],
+  note:"Warn about driving and alcohol. Review for suicidal thoughts and misuse."},
+ {n:"Co-codamol", c:"Opioid with paracetamol", a:"Pain and neurology", u:"Mild to moderate pain not relieved by paracetamol alone",
+  se:["Constipation","Nausea and drowsiness","Dizziness and headache"],
+  ci:["Acute respiratory depression or acute asthma","CYP2D6 ultra-rapid metabolisers, breastfeeding, and children under 12","Caution: dependence with prolonged use; avoid other paracetamol-containing products (maximum 4 g in 24 hours; lower if under 50 kg or hepatic impairment)"],
+  note:"Offer a laxative if constipation is likely. Review regularly and avoid long-term use."},
+ {n:"Naproxen", c:"NSAID", a:"Pain and neurology", u:"Musculoskeletal pain, inflammatory arthritis, gout",
+  se:["Dyspepsia and gastrointestinal upset","Gastrointestinal ulceration and bleeding","Fluid retention, raised blood pressure and renal impairment"],
+  ci:["Active or previous NSAID-related peptic ulcer or gastrointestinal bleeding","Severe heart failure; use with caution in ischaemic heart disease, stroke and hypertension; avoid if eGFR below 30","Aspirin or NSAID hypersensitivity, including NSAID-induced asthma"],
+  note:"Use the lowest effective dose for the shortest time, with a PPI if at gastrointestinal risk. Avoid combining with an ACE inhibitor or ARB plus a diuretic (acute kidney injury risk)."},
+ {n:"Salbutamol", c:"Short-acting beta-2 agonist", a:"Respiratory", u:"Asthma and COPD – relief of bronchospasm",
+  se:["Tremor","Tachycardia and palpitations","Headache (hypokalaemia at high doses)"],
+  ci:["No absolute contraindication apart from hypersensitivity","Caution: hyperthyroidism, cardiovascular disease and arrhythmias","Caution: hypokalaemia risk at high doses, especially with steroids, diuretics or theophylline"],
+  note:"Frequent reliever use (e.g. three or more canisters a year) suggests poor asthma control – review preventer therapy."},
+ {n:"Amoxicillin", c:"Penicillin antibiotic", a:"Infection", u:"Respiratory, ENT, urinary and dental infections",
+  se:["Diarrhoea","Nausea and vomiting","Rash (non-allergic maculopapular rash is common in glandular fever)"],
+  ci:["Penicillin hypersensitivity (anaphylaxis, urticaria, angioedema)","Glandular fever or chronic lymphocytic leukaemia (high risk of rash) – avoid","Reduce the dose in severe renal impairment"],
+  note:"Clostridioides difficile infection is a risk with any antibiotic. Check allergy history before prescribing."},
+ {n:"Tamsulosin", c:"Alpha-blocker", a:"Urology", u:"Lower urinary tract symptoms in benign prostatic hyperplasia",
+  se:["Dizziness and postural hypotension","Abnormal or retrograde ejaculation","Headache"],
+  ci:["History of postural hypotension or syncope","Severe hepatic impairment","Caution: cataract surgery – risk of intra-operative floppy iris syndrome (tell the surgeon)"],
+  note:"Take after the same meal each day. Warn about dizziness and driving, especially after the first dose."}
+];
+const $ = id => document.getElementById(id);
+const areas = ["All", ...new Set(DRUGS.map(d => d.a))];
+let area = "All";
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;");}
+function renderChips(){
+  $("chips").innerHTML = areas.map(a => `<button type="button" class="chip" aria-pressed="${a===area}" data-a="${a}">${a}</button>`).join("");
+  $("chips").querySelectorAll("button").forEach(b => b.onclick = () => { area = b.dataset.a; renderChips(); render(); });
+}
+function render(){
+  const q = $("q").value.trim().toLowerCase();
+  const rows = DRUGS.filter(d => (area==="All"||d.a===area) && (!q || (d.n+" "+d.c+" "+d.u+" "+d.a).toLowerCase().includes(q)));
+  $("list").innerHTML = rows.length ? rows.map(d => `
+    <details>
+      <summary><span class="n">${esc(d.n)}</span><span class="c">${esc(d.c)}</span></summary>
+      <div class="body">
+        <p class="use"><b>Used for:</b> ${esc(d.u)}</p>
+        <div class="cols">
+          <div class="box se"><h3>3 common side effects</h3><ul>${d.se.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>
+          <div class="box ci"><h3>Contraindications / key cautions</h3><ul>${d.ci.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>
+        </div>
+        ${d.note?`<p class="note">${esc(d.note)}</p>`:""}
+      </div>
+    </details>`).join("") : '<p class="empty">No medicines match your search.</p>';
+}
+$("q").addEventListener("input", render);
+$("expand").onclick = () => document.querySelectorAll("#list details").forEach(d => d.open = true);
+$("collapse").onclick = () => document.querySelectorAll("#list details").forEach(d => d.open = false);
+renderChips(); render();
+</script>
+</body>
+</html>
