@@ -1,0 +1,4 @@
+Contact: mailto:alam.sameer1994@gmail.com?subject=GPCalc%20security
+Expires: 2027-09-30T23:59:59.000Z
+Preferred-Languages: en
+Canonical: https://gpcalc.co.uk/.well-known/security.txt
