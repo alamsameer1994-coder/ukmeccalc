@@ -7,31 +7,31 @@
 <title>NICE Hypertension Calculator | GPCalc</title>
 <style>
 :root{
-  --bg:#f2f7f6; --panel:#ffffff; --ink:#0e1446; --muted:#4f5b7e; --line:#d5e1e0; --brand:#0e1446;
-  --accent:#1f6f8b; --accent-ink:#ffffff;
+  --bg:#f5f7fa; --panel:#ffffff; --ink:#1b2430; --muted:#5b6777; --line:#dfe4ea;
+  --accent:#005eb8; --accent-ink:#ffffff;
   --red:#c62828; --red-bg:#fdecec; --amber:#b26a00; --amber-bg:#fff4e0;
-  --green:#2e7d32; --green-bg:#e8f5e9; --blue:#1f6f8b; --blue-bg:#e2f0f3;
-  --grey:#4f5b7e; --grey-bg:#eceff7; --chip:#e6f1ef;
+  --green:#2e7d32; --green-bg:#e8f5e9; --blue:#1565c0; --blue-bg:#e8f1fc;
+  --grey:#546e7a; --grey-bg:#eef1f4; --chip:#eef2f7;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#090d2c; --panel:#121846; --ink:#e8edff; --muted:#9ea9d0; --line:#232b66; --brand:#121846;
-    --accent:#7ee06a; --accent-ink:#0e1446;
+    --bg:#11161c; --panel:#1a2129; --ink:#e6ebf0; --muted:#9aa7b4; --line:#2c3642;
+    --accent:#4c9be8; --accent-ink:#0b1320;
     --red:#ff7b72; --red-bg:#3a1d1d; --amber:#f0b25a; --amber-bg:#3a2d16;
-    --green:#7ccf83; --green-bg:#1b3320; --blue:#6cc9cf; --blue-bg:#0f2a45;
-    --grey:#a3acd0; --grey-bg:#1a2050; --chip:#1a2158;
+    --green:#7ccf83; --green-bg:#1b3320; --blue:#79b4f5; --blue-bg:#182b42;
+    --grey:#a9b8c4; --grey-bg:#232c36; --chip:#26303b;
   }
 }
 :root[data-theme="dark"]{
-    --bg:#090d2c; --panel:#121846; --ink:#e8edff; --muted:#9ea9d0; --line:#232b66; --brand:#121846;
-    --accent:#7ee06a; --accent-ink:#0e1446;
+    --bg:#11161c; --panel:#1a2129; --ink:#e6ebf0; --muted:#9aa7b4; --line:#2c3642;
+    --accent:#4c9be8; --accent-ink:#0b1320;
     --red:#ff7b72; --red-bg:#3a1d1d; --amber:#f0b25a; --amber-bg:#3a2d16;
-    --green:#7ccf83; --green-bg:#1b3320; --blue:#6cc9cf; --blue-bg:#0f2a45;
-    --grey:#a3acd0; --grey-bg:#1a2050; --chip:#1a2158;
+    --green:#7ccf83; --green-bg:#1b3320; --blue:#79b4f5; --blue-bg:#182b42;
+    --grey:#a9b8c4; --grey-bg:#232c36; --chip:#26303b;
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
-header{background:var(--brand);color:#fff;border-bottom:3px solid #7ee06a;padding:18px 16px}
+header{background:var(--accent);color:var(--accent-ink);padding:18px 16px}
 header .wrap{max-width:1180px;margin:0 auto;display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
 header h1{margin:0;font-size:22px;letter-spacing:-.01em}
 header p{margin:2px 0 0;opacity:.9;font-size:13px}
