@@ -148,9 +148,11 @@ body.leaflet-open main, body.leaflet-open header{display:none}
 .qr-warn{font-size:13px;margin:6px 0 0;padding-left:18px}
 .qr-warn li{margin:2px 0}
 .qr-assume{font-size:12px;color:var(--muted);margin:6px 0 0}
-.qr-disc{font-size:11.5px;color:var(--muted);margin:10px 0 0;line-height:1.45}
-.qr-disc p{margin:0 0 4px}
-.qr-disc a{color:var(--accent)}
+.qr-foot{font-size:11.5px;color:var(--muted);margin:8px 0 0}
+.qr-disc-link{background:none;border:0;padding:0;margin:0 0 0 2px;font:inherit;color:var(--accent);text-decoration:underline;cursor:pointer}
+.qr-disc-body{font-size:11.5px;color:var(--muted);margin:6px 0 0;line-height:1.45}
+.qr-disc-body p{margin:0 0 4px}
+.qr-disc-body a{color:var(--accent)}
 </style>
 <style>.site-back{display:inline-block;font:600 13px/1 -apple-system,"Segoe UI",Arial,sans-serif;color:inherit;opacity:.85;text-decoration:none;margin:10px 16px 0}.site-back:hover{opacity:1;text-decoration:underline}@media print{.site-back,.site-foot{display:none!important}}</style></head>
 <body>
@@ -1422,7 +1424,7 @@ function qrisk3Female(age, b_AF, b_atypicalantipsy, b_corticosteroids, b_migrain
 }
 
 // ---------- QRISK3 calculator panel (fills the QRISK3 box above) ----------
-const QR = { renalTouched:false, txTouched:false, auto:false, setting:false, last:'' };
+const QR = { renalTouched:false, txTouched:false, auto:false, setting:false, last:'', discOpen:false };
 const QR_SD_MEAN = { m: 8.756621360778809, f: 9.002537727355957 };   // model centring values: "average variability"
 
 function qrRead(){
@@ -1453,10 +1455,13 @@ function qrScore(q){
 const QR_HARD = [['age',25,84,'Age'],['sbp',50,300,'Clinic systolic BP'],['ratio',0.5,30,'Cholesterol : HDL ratio'],['bmi',10,90,'BMI'],['sd',0,100,'SBP variability'],['town',-12,16,'Townsend score']];
 const QR_SOFT = [['bmi',20,40,'BMI'],['sbp',70,210,'Systolic BP'],['ratio',1,12,'Cholesterol : HDL ratio'],['sd',0,40,'SBP variability'],['town',-7,11,'Townsend score']];
 
-const QR_DISCLAIMER = `<div class="qr-disc">
-  <p><b>QRISK3 disclaimer.</b> The initial implementation, to be found at http://svn.clinrisk.co.uk/opensource/qrisk2, faithfully implements QRISK3-2017. ClinRisk Ltd. have released this code under the GNU Lesser General Public License to enable others to implement the algorithm faithfully. However, the nature of the GNU Lesser General Public License is such that we cannot prevent, for example, someone accidentally altering the coefficients, getting the inputs wrong, or just poor programming. ClinRisk Ltd. stress, therefore, that it is the responsibility of the end user to check that the source that they receive produces the same results as the original code found at <a href="https://qrisk.org" target="_blank" rel="noopener noreferrer">https://qrisk.org</a>. Inaccurate implementations of risk scores can lead to wrong patients being given the wrong treatment.</p>
-  <p>This calculator contains an unofficial JavaScript port of the QRISK3-2017 algorithm (copyright 2017 ClinRisk Ltd.), used under the <a href="https://www.gnu.org/licenses/lgpl-3.0.html" target="_blank" rel="noopener noreferrer">GNU LGPL v3</a>; its source is the unminified script in this page. QRISK® is a registered trademark of the University of Nottingham and EMIS Group; GPCalc is not affiliated with or endorsed by them. Decision support only – it does not replace clinical judgement.</p>
+const QR_DISC_BODY = `<div class="qr-disc-body">
+  <p><b>QRISK3.</b> The initial implementation, to be found at http://svn.clinrisk.co.uk/opensource/qrisk2, faithfully implements QRISK3-2017. ClinRisk Ltd. have released this code under the GNU Lesser General Public License to enable others to implement the algorithm faithfully. However, the nature of the GNU Lesser General Public License is such that we cannot prevent, for example, someone accidentally altering the coefficients, getting the inputs wrong, or just poor programming. ClinRisk Ltd. stress, therefore, that it is the responsibility of the end user to check that the source that they receive produces the same results as the original code found at <a href="https://qrisk.org" target="_blank" rel="noopener noreferrer">https://qrisk.org</a>. Inaccurate implementations of risk scores can lead to wrong patients being given the wrong treatment.</p>
+  <p><b>Licence and trademark.</b> This calculator contains an unofficial JavaScript port of the QRISK3-2017 algorithm (copyright 2017 ClinRisk Ltd.), used under the <a href="https://www.gnu.org/licenses/lgpl-3.0.html" target="_blank" rel="noopener noreferrer">GNU LGPL v3</a>; its source is the unminified script in this page. QRISK® is a registered trademark of the University of Nottingham and EMIS Group; GPCalc is not affiliated with or endorsed by them.</p>
+  <p><b>Clinical use.</b> Decision support only – it does not replace clinical judgement.</p>
 </div>`;
+// one short line under the score; the full text opens from the "Disclaimers" link (ClinRisk requires it to stay easily accessible)
+const qrDiscHtml = () => `<div class="qr-foot">Decision support only · QRISK3-2017 (ClinRisk) <button type="button" class="qr-disc-link" id="qrDiscBtn" aria-expanded="${QR.discOpen}" aria-controls="qrDiscBody">Disclaimers</button></div>${QR.discOpen ? QR_DISC_BODY.replace('class="qr-disc-body"', 'class="qr-disc-body" id="qrDiscBody"') : ''}`;
 
 function qrApply(risk, allowFill){
   const el = $('qrisk');
@@ -1540,7 +1545,7 @@ function qrUpdate(allowFill){
     ${useBtn}
     <ul class="qr-warn">${notes.map(n => `<li>${n}</li>`).join('')}</ul>
     ${assumed.length ? `<p class="qr-assume">Assumed (not entered): ${assumed.join('; ')}.</p>` : ''}
-    ${QR_DISCLAIMER}
+    ${qrDiscHtml()}
   </div>`);
   qrApply(risk, allowFill);
 }
@@ -1564,6 +1569,7 @@ function qrOnEvent(e){
 $('inputs').addEventListener('input', qrOnEvent);
 $('inputs').addEventListener('change', qrOnEvent);
 $('qrRes').addEventListener('click', e => {
+  if (e.target.closest('#qrDiscBtn')){ QR.discOpen = !QR.discOpen; qrUpdate(false); return; }
   const b = e.target.closest('#qrUse'); if (!b) return;
   QR.setting = true; $('qrisk').value = b.dataset.v; $('qrisk').dispatchEvent(new Event('input', {bubbles:true})); QR.setting = false;
   QR.auto = true; qrUpdate(false);
