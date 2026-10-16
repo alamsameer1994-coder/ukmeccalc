@@ -140,6 +140,17 @@ body.leaflet-open main, body.leaflet-open header{display:none}
 .drug .dbox ul{margin:0;padding-left:18px}.drug .dbox li{margin:2px 0}
 .drug .dmon{margin:8px 0 0;font-size:13px;color:var(--muted)}
 .drugdisc{font-size:12.5px;color:var(--muted);margin:0 0 8px}
+.qr-using{font-size:12.5px;color:var(--muted);margin:0 0 10px}
+#qrRes{margin-top:12px}
+#qrRes .qr-big{font-size:34px;font-weight:800;line-height:1.1;letter-spacing:-.01em}
+#qrRes .card p{margin:4px 0}
+.qr-need{font-size:13px;color:var(--muted);margin:0}
+.qr-warn{font-size:13px;margin:6px 0 0;padding-left:18px}
+.qr-warn li{margin:2px 0}
+.qr-assume{font-size:12px;color:var(--muted);margin:6px 0 0}
+.qr-disc{font-size:11.5px;color:var(--muted);margin:10px 0 0;line-height:1.45}
+.qr-disc p{margin:0 0 4px}
+.qr-disc a{color:var(--accent)}
 </style>
 <style>.site-back{display:inline-block;font:600 13px/1 -apple-system,"Segoe UI",Arial,sans-serif;color:inherit;opacity:.85;text-decoration:none;margin:10px 16px 0}.site-back:hover{opacity:1;text-decoration:underline}@media print{.site-back,.site-foot{display:none!important}}</style></head>
 <body>
@@ -196,6 +207,45 @@ body.leaflet-open main, body.leaflet-open header{display:none}
       <div class="field"><label for="acr">Urine ACR (mg/mmol)</label>
         <select id="acr"><option value="">Unknown</option><option value="lt70">Below 70</option><option value="ge70">70 or more</option></select></div>
     </div>
+  </div>
+
+  <div class="panel" id="qrPanel">
+    <h2>QRISK3 10-year risk calculator</h2>
+    <p class="hint">Optional. Calculates the 10-year risk of heart attack or stroke and fills in the QRISK3 box above. Uses the age, sex, clinic systolic BP, diabetes and CKD entered in this form. For adults aged 25–84 <b>without</b> established CVD.</p>
+    <p class="qr-using" id="qrUsing"></p>
+    <details id="qrCalc"><summary>Enter QRISK3 details</summary><div class="inner">
+      <div class="row">
+        <div class="field"><label for="q_eth">Ethnicity</label>
+          <select id="q_eth"><option value="">Select…</option><option value="1">White or not stated</option><option value="2">Indian</option><option value="3">Pakistani</option><option value="4">Bangladeshi</option><option value="8">Chinese</option><option value="5">Other Asian</option><option value="6">Black Caribbean</option><option value="7">Black African</option><option value="9">Other ethnic group</option></select></div>
+        <div class="field"><label for="q_smoke">Smoking status</label>
+          <select id="q_smoke"><option value="">Select…</option><option value="0">Non-smoker</option><option value="1">Ex-smoker</option><option value="2">Light smoker (under 10/day)</option><option value="3">Moderate smoker (10–19/day)</option><option value="4">Heavy smoker (20+/day)</option></select></div>
+      </div>
+      <div class="row">
+        <div class="field"><label for="q_ratio">Total cholesterol : HDL ratio</label><input id="q_ratio" type="number" min="1" max="12" step="0.1" inputmode="decimal"></div>
+        <div class="field"><label for="q_sd">SBP variability <span class="sub">(SD, optional)</span></label><input id="q_sd" type="number" min="0" max="40" step="0.1" inputmode="decimal"></div>
+        <div class="field"><label for="q_town">Townsend score <span class="sub">(optional)</span></label><input id="q_town" type="number" min="-7" max="11" step="0.01" inputmode="decimal"></div>
+      </div>
+      <p class="hint">SBP variability = standard deviation of at least two recent systolic readings; leave blank if unknown (an average value is assumed). Townsend deprivation score from the postcode; leave blank for 0 (about average).</p>
+      <div class="row">
+        <div class="field"><label for="q_h">Height (cm)</label><input id="q_h" type="number" min="100" max="250" inputmode="decimal"></div>
+        <div class="field"><label for="q_w">Weight (kg)</label><input id="q_w" type="number" min="30" max="300" step="0.1" inputmode="decimal"></div>
+        <div class="field"><label for="q_bmi">BMI (kg/m²)</label><input id="q_bmi" type="number" min="10" max="90" step="0.1" inputmode="decimal"></div>
+      </div>
+      <div class="checks">
+        <label><input type="checkbox" id="q_fh"><span>Angina or heart attack in a first-degree relative aged under 60</span></label>
+        <label><input type="checkbox" id="q_tx"><span>On blood-pressure treatment <span class="sub">(ticked automatically for known hypertension)</span></span></label>
+        <label><input type="checkbox" id="q_renal"><span>Chronic kidney disease stage 3, 4 or 5 <span class="sub">(follows the CKD box above until changed here)</span></span></label>
+        <label><input type="checkbox" id="q_af"><span>Atrial fibrillation</span></label>
+        <label><input type="checkbox" id="q_migr"><span>Migraine</span></label>
+        <label><input type="checkbox" id="q_ra"><span>Rheumatoid arthritis</span></label>
+        <label><input type="checkbox" id="q_sle"><span>Systemic lupus erythematosus (SLE)</span></label>
+        <label><input type="checkbox" id="q_smi"><span>Severe mental illness <span class="sub">(psychosis, schizophrenia, bipolar disorder)</span></span></label>
+        <label><input type="checkbox" id="q_atyp"><span>Taking an atypical antipsychotic</span></label>
+        <label><input type="checkbox" id="q_cort"><span>Regular steroid tablets</span></label>
+        <label id="q_edWrap" class="hidden"><input type="checkbox" id="q_ed"><span>Diagnosis of, or treatment for, erectile dysfunction</span></label>
+      </div>
+    </div></details>
+    <div id="qrRes" aria-live="polite"></div>
   </div>
 
   <div class="panel">
@@ -1083,6 +1133,443 @@ $('resetBtn').addEventListener('click', () => {
 document.getElementById('inputs').addEventListener('input', compute);
 document.getElementById('inputs').addEventListener('change', compute);
 compute();
+
+
+// ---------- QRISK3-2017 algorithm ----------
+/*
+ * QRISK3-2017 algorithm - unofficial JavaScript port, embedded unmodified (function names changed only).
+ * Source: npm "qrisk3-2017" 1.0.0 (Rob Hogan, LGPL-3.0), a port of the ClinRisk Ltd. original.
+ *
+ * Copyright 2017 ClinRisk Ltd.
+ *
+ * This file is part of QRISK3-2017 (https://qrisk.org).
+ *
+ * QRISK3-2017 is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * QRISK3-2017 is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with QRISK3-2017.  If not, see http://www.gnu.org/licenses/.
+ *
+ * Additional terms
+ *
+ * The following disclaimer must be held together with any risk score score generated by this code.
+ * If the score is displayed, then this disclaimer must be displayed or otherwise be made easily accessible, e.g. by a prominent link alongside it.
+ *   The initial version of this file, to be found at http://svn.clinrisk.co.uk/opensource/qrisk2, faithfully implements QRISK3-2017.
+ *   ClinRisk Ltd. have released this code under the GNU Lesser General Public License to enable others to implement the algorithm faithfully.
+ *   However, the nature of the GNU Lesser General Public License is such that we cannot prevent, for example, someone accidentally
+ *   altering the coefficients, getting the inputs wrong, or just poor programming.
+ *   ClinRisk Ltd. stress, therefore, that it is the responsibility of the end user to check that the source that they receive produces the same
+ *   results as the original code found at https://qrisk.org.
+ *   Inaccurate implementations of risk scores can lead to wrong patients being given the wrong treatment.
+ *
+ * End of additional terms
+ */
+function qrisk3Male(age, b_AF, b_atypicalantipsy, b_corticosteroids, b_impotence2, b_migraine, b_ra, b_renal, b_semi, b_sle, b_treatedhyp, b_type1, b_type2, bmi, ethrisk, fh_cvd, rati, sbp, sbps5, smoke_cat, surv, town) {
+    var survivor = [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0.977268040180206,
+        0,
+        0,
+        0,
+        0,
+        0
+    ];
+    /* The conditional arrays */
+    var Iethrisk = [
+        0,
+        0,
+        0.2771924876030827900000000,
+        0.4744636071493126800000000,
+        0.5296172991968937100000000,
+        0.0351001591862990170000000,
+        -0.3580789966932791900000000,
+        -0.4005648523216514000000000,
+        -0.4152279288983017300000000,
+        -0.2632134813474996700000000
+    ];
+    var Ismoke = [
+        0,
+        0.1912822286338898300000000,
+        0.5524158819264555200000000,
+        0.6383505302750607200000000,
+        0.7898381988185801900000000
+    ];
+    /* Applying the fractional polynomial transforms */
+    /* (which includes scaling)                      */
+    var dage = age;
+    dage = dage / 10;
+    var age_1 = Math.pow(dage, -1);
+    var age_2 = Math.pow(dage, 3);
+    var dbmi = bmi;
+    dbmi = dbmi / 10;
+    var bmi_2 = Math.pow(dbmi, -2) * Math.log(dbmi);
+    var bmi_1 = Math.pow(dbmi, -2);
+    /* Centring the continuous variables */
+    age_1 = age_1 - 0.234766781330109;
+    age_2 = age_2 - 77.284080505371094;
+    bmi_1 = bmi_1 - 0.149176135659218;
+    bmi_2 = bmi_2 - 0.141913309693336;
+    rati = rati - 4.300998687744141;
+    sbp = sbp - 128.571578979492190;
+    sbps5 = sbps5 - 8.756621360778809;
+    town = town - 0.526304900646210;
+    /* Start of Sum */
+    var a = 0;
+    /* The conditional sums */
+    a += Iethrisk[ethrisk];
+    a += Ismoke[smoke_cat];
+    /* Sum from continuous values */
+    a += age_1 * -17.8397816660055750000000000;
+    a += age_2 * 0.0022964880605765492000000;
+    a += bmi_1 * 2.4562776660536358000000000;
+    a += bmi_2 * -8.3011122314711354000000000;
+    a += rati * 0.1734019685632711100000000;
+    a += sbp * 0.0129101265425533050000000;
+    a += sbps5 * 0.0102519142912904560000000;
+    a += town * 0.0332682012772872950000000;
+    /* Sum from boolean values */
+    a += b_AF * 0.8820923692805465700000000;
+    a += b_atypicalantipsy * 0.1304687985517351300000000;
+    a += b_corticosteroids * 0.4548539975044554300000000;
+    a += b_impotence2 * 0.2225185908670538300000000;
+    a += b_migraine * 0.2558417807415991300000000;
+    a += b_ra * 0.2097065801395656700000000;
+    a += b_renal * 0.7185326128827438400000000;
+    a += b_semi * 0.1213303988204716400000000;
+    a += b_sle * 0.4401572174457522000000000;
+    a += b_treatedhyp * 0.5165987108269547400000000;
+    a += b_type1 * 1.2343425521675175000000000;
+    a += b_type2 * 0.8594207143093222100000000;
+    a += fh_cvd * 0.5405546900939015600000000;
+    /* Sum from interaction terms */
+    a += age_1 * (smoke_cat === 1 ? 1 : 0) * -0.2101113393351634600000000;
+    a += age_1 * (smoke_cat === 2 ? 1 : 0) * 0.7526867644750319100000000;
+    a += age_1 * (smoke_cat === 3 ? 1 : 0) * 0.9931588755640579100000000;
+    a += age_1 * (smoke_cat === 4 ? 1 : 0) * 2.1331163414389076000000000;
+    a += age_1 * b_AF * 3.4896675530623207000000000;
+    a += age_1 * b_corticosteroids * 1.1708133653489108000000000;
+    a += age_1 * b_impotence2 * -1.5064009857454310000000000;
+    a += age_1 * b_migraine * 2.3491159871402441000000000;
+    a += age_1 * b_renal * -0.5065671632722369400000000;
+    a += age_1 * b_treatedhyp * 6.5114581098532671000000000;
+    a += age_1 * b_type1 * 5.3379864878006531000000000;
+    a += age_1 * b_type2 * 3.6461817406221311000000000;
+    a += age_1 * bmi_1 * 31.0049529560338860000000000;
+    a += age_1 * bmi_2 * -111.2915718439164300000000000;
+    a += age_1 * fh_cvd * 2.7808628508531887000000000;
+    a += age_1 * sbp * 0.0188585244698658530000000;
+    a += age_1 * town * -0.1007554870063731000000000;
+    a += age_2 * (smoke_cat === 1 ? 1 : 0) * -0.0004985487027532612100000;
+    a += age_2 * (smoke_cat === 2 ? 1 : 0) * -0.0007987563331738541400000;
+    a += age_2 * (smoke_cat === 3 ? 1 : 0) * -0.0008370618426625129600000;
+    a += age_2 * (smoke_cat === 4 ? 1 : 0) * -0.0007840031915563728900000;
+    a += age_2 * b_AF * -0.0003499560834063604900000;
+    a += age_2 * b_corticosteroids * -0.0002496045095297166000000;
+    a += age_2 * b_impotence2 * -0.0011058218441227373000000;
+    a += age_2 * b_migraine * 0.0001989644604147863100000;
+    a += age_2 * b_renal * -0.0018325930166498813000000;
+    a += age_2 * b_treatedhyp * 0.0006383805310416501300000;
+    a += age_2 * b_type1 * 0.0006409780808752897000000;
+    a += age_2 * b_type2 * -0.0002469569558886831500000;
+    a += age_2 * bmi_1 * 0.0050380102356322029000000;
+    a += age_2 * bmi_2 * -0.0130744830025243190000000;
+    a += age_2 * fh_cvd * -0.0002479180990739603700000;
+    a += age_2 * sbp * -0.0000127187419158845700000;
+    a += age_2 * town * -0.0000932996423232728880000;
+    /* Calculate the score itself */
+    var score = 100.0 * (1 - Math.pow(survivor[surv], Math.exp(a)));
+    return score;
+}
+function qrisk3Female(age, b_AF, b_atypicalantipsy, b_corticosteroids, b_migraine, b_ra, b_renal, b_semi, b_sle, b_treatedhyp, b_type1, b_type2, bmi, ethrisk, fh_cvd, rati, sbp, sbps5, smoke_cat, surv, town) {
+    var survivor = [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0.988876402378082,
+        0,
+        0,
+        0,
+        0,
+        0
+    ];
+    /* The conditional arrays */
+    var Iethrisk = [
+        0,
+        0,
+        0.2804031433299542500000000,
+        0.5629899414207539800000000,
+        0.2959000085111651600000000,
+        0.0727853798779825450000000,
+        -0.1707213550885731700000000,
+        -0.3937104331487497100000000,
+        -0.3263249528353027200000000,
+        -0.1712705688324178400000000
+    ];
+    var Ismoke = [
+        0,
+        0.1338683378654626200000000,
+        0.5620085801243853700000000,
+        0.6674959337750254700000000,
+        0.8494817764483084700000000
+    ];
+    /* Applying the fractional polynomial transforms */
+    /* (which includes scaling)                      */
+    var dage = age;
+    dage = dage / 10;
+    var age_1 = Math.pow(dage, -2);
+    var age_2 = dage;
+    var dbmi = bmi;
+    dbmi = dbmi / 10;
+    var bmi_1 = Math.pow(dbmi, -2);
+    var bmi_2 = Math.pow(dbmi, -2) * Math.log(dbmi);
+    /* Centring the continuous variables */
+    age_1 = age_1 - 0.053274843841791;
+    age_2 = age_2 - 4.332503318786621;
+    bmi_1 = bmi_1 - 0.154946178197861;
+    bmi_2 = bmi_2 - 0.144462317228317;
+    rati = rati - 3.476326465606690;
+    sbp = sbp - 123.130012512207030;
+    sbps5 = sbps5 - 9.002537727355957;
+    town = town - 0.392308831214905;
+    /* Start of Sum */
+    var a = 0;
+    /* The conditional sums */
+    a += Iethrisk[ethrisk];
+    a += Ismoke[smoke_cat];
+    /* Sum from continuous values */
+    a += age_1 * -8.1388109247726188000000000;
+    a += age_2 * 0.7973337668969909800000000;
+    a += bmi_1 * 0.2923609227546005200000000;
+    a += bmi_2 * -4.1513300213837665000000000;
+    a += rati * 0.1533803582080255400000000;
+    a += sbp * 0.0131314884071034240000000;
+    a += sbps5 * 0.0078894541014586095000000;
+    a += town * 0.0772237905885901080000000;
+    /* Sum from boolean values */
+    a += b_AF * 1.5923354969269663000000000;
+    a += b_atypicalantipsy * 0.2523764207011555700000000;
+    a += b_corticosteroids * 0.5952072530460185100000000;
+    a += b_migraine * 0.3012672608703450000000000;
+    a += b_ra * 0.2136480343518194200000000;
+    a += b_renal * 0.6519456949384583300000000;
+    a += b_semi * 0.1255530805882017800000000;
+    a += b_sle * 0.7588093865426769300000000;
+    a += b_treatedhyp * 0.5093159368342300400000000;
+    a += b_type1 * 1.7267977510537347000000000;
+    a += b_type2 * 1.0688773244615468000000000;
+    a += fh_cvd * 0.4544531902089621300000000;
+    /* Sum from interaction terms */
+    a += age_1 * (smoke_cat === 1 ? 1 : 0) * -4.7057161785851891000000000;
+    a += age_1 * (smoke_cat === 2 ? 1 : 0) * -2.7430383403573337000000000;
+    a += age_1 * (smoke_cat === 3 ? 1 : 0) * -0.8660808882939218200000000;
+    a += age_1 * (smoke_cat === 4 ? 1 : 0) * 0.9024156236971064800000000;
+    a += age_1 * b_AF * 19.9380348895465610000000000;
+    a += age_1 * b_corticosteroids * -0.9840804523593628100000000;
+    a += age_1 * b_migraine * 1.7634979587872999000000000;
+    a += age_1 * b_renal * -3.5874047731694114000000000;
+    a += age_1 * b_sle * 19.6903037386382920000000000;
+    a += age_1 * b_treatedhyp * 11.8728097339218120000000000;
+    a += age_1 * b_type1 * -1.2444332714320747000000000;
+    a += age_1 * b_type2 * 6.8652342000009599000000000;
+    a += age_1 * bmi_1 * 23.8026234121417420000000000;
+    a += age_1 * bmi_2 * -71.1849476920870070000000000;
+    a += age_1 * fh_cvd * 0.9946780794043512700000000;
+    a += age_1 * sbp * 0.0341318423386154850000000;
+    a += age_1 * town * -1.0301180802035639000000000;
+    a += age_2 * (smoke_cat === 1 ? 1 : 0) * -0.0755892446431930260000000;
+    a += age_2 * (smoke_cat === 2 ? 1 : 0) * -0.1195119287486707400000000;
+    a += age_2 * (smoke_cat === 3 ? 1 : 0) * -0.1036630639757192300000000;
+    a += age_2 * (smoke_cat === 4 ? 1 : 0) * -0.1399185359171838900000000;
+    a += age_2 * b_AF * -0.0761826510111625050000000;
+    a += age_2 * b_corticosteroids * -0.1200536494674247200000000;
+    a += age_2 * b_migraine * -0.0655869178986998590000000;
+    a += age_2 * b_renal * -0.2268887308644250700000000;
+    a += age_2 * b_sle * 0.0773479496790162730000000;
+    a += age_2 * b_treatedhyp * 0.0009685782358817443600000;
+    a += age_2 * b_type1 * -0.2872406462448894900000000;
+    a += age_2 * b_type2 * -0.0971122525906954890000000;
+    a += age_2 * bmi_1 * 0.5236995893366442900000000;
+    a += age_2 * bmi_2 * 0.0457441901223237590000000;
+    a += age_2 * fh_cvd * -0.0768850516984230380000000;
+    a += age_2 * sbp * -0.0015082501423272358000000;
+    a += age_2 * town * -0.0315934146749623290000000;
+    /* Calculate the score itself */
+    var score = 100.0 * (1 - Math.pow(survivor[surv], Math.exp(a)));
+    return score;
+}
+
+// ---------- QRISK3 calculator panel (fills the QRISK3 box above) ----------
+const QR = { renalTouched:false, txTouched:false, auto:false, setting:false, last:'' };
+const QR_SD_MEAN = { m: 8.756621360778809, f: 9.002537727355957 };   // model centring values: "average variability"
+
+function qrRead(){
+  const male = $('sex').value === 'm';
+  return {
+    sex: $('sex').value, male,
+    age: num('age'), sbp: num('csys'),
+    t1: chk('t1dm'), t2: chk('t2dm'), cvd: chk('cvd'),
+    eth: $('q_eth').value === '' ? null : +$('q_eth').value,
+    smoke: $('q_smoke').value === '' ? null : +$('q_smoke').value,
+    ratio: num('q_ratio'), sd: num('q_sd'), town: num('q_town'), bmi: num('q_bmi'),
+    fh: chk('q_fh'), tx: chk('q_tx'), renal: chk('q_renal'), af: chk('q_af'), migr: chk('q_migr'),
+    ra: chk('q_ra'), sle: chk('q_sle'), smi: chk('q_smi'), atyp: chk('q_atyp'), cort: chk('q_cort'),
+    ed: male && chk('q_ed')
+  };
+}
+
+function qrScore(q){
+  const b = x => x ? 1 : 0;
+  const sd = q.sd == null ? (q.male ? QR_SD_MEAN.m : QR_SD_MEAN.f) : q.sd;
+  const town = q.town == null ? 0 : q.town;
+  return q.male
+    ? qrisk3Male(q.age, b(q.af), b(q.atyp), b(q.cort), b(q.ed), b(q.migr), b(q.ra), b(q.renal), b(q.smi), b(q.sle), b(q.tx), b(q.t1), b(q.t2), q.bmi, q.eth, b(q.fh), q.ratio, q.sbp, sd, q.smoke, 10, town)
+    : qrisk3Female(q.age, b(q.af), b(q.atyp), b(q.cort), b(q.migr), b(q.ra), b(q.renal), b(q.smi), b(q.sle), b(q.tx), b(q.t1), b(q.t2), q.bmi, q.eth, b(q.fh), q.ratio, q.sbp, sd, q.smoke, 10, town);
+}
+
+// implausible values block the calculation; unusual values only trigger a caution
+const QR_HARD = [['age',25,84,'Age'],['sbp',50,300,'Clinic systolic BP'],['ratio',0.5,30,'Cholesterol : HDL ratio'],['bmi',10,90,'BMI'],['sd',0,100,'SBP variability'],['town',-12,16,'Townsend score']];
+const QR_SOFT = [['bmi',20,40,'BMI'],['sbp',70,210,'Systolic BP'],['ratio',1,12,'Cholesterol : HDL ratio'],['sd',0,40,'SBP variability'],['town',-7,11,'Townsend score']];
+
+const QR_DISCLAIMER = `<div class="qr-disc">
+  <p><b>QRISK3 disclaimer.</b> The initial implementation, to be found at http://svn.clinrisk.co.uk/opensource/qrisk2, faithfully implements QRISK3-2017. ClinRisk Ltd. have released this code under the GNU Lesser General Public License to enable others to implement the algorithm faithfully. However, the nature of the GNU Lesser General Public License is such that we cannot prevent, for example, someone accidentally altering the coefficients, getting the inputs wrong, or just poor programming. ClinRisk Ltd. stress, therefore, that it is the responsibility of the end user to check that the source that they receive produces the same results as the original code found at <a href="https://qrisk.org" target="_blank" rel="noopener noreferrer">https://qrisk.org</a>. Inaccurate implementations of risk scores can lead to wrong patients being given the wrong treatment.</p>
+  <p>This calculator contains an unofficial JavaScript port of the QRISK3-2017 algorithm (copyright 2017 ClinRisk Ltd.), used under the <a href="https://www.gnu.org/licenses/lgpl-3.0.html" target="_blank" rel="noopener noreferrer">GNU LGPL v3</a>; its source is the unminified script in this page. QRISK® is a registered trademark of the University of Nottingham and EMIS Group; GPCalc is not affiliated with or endorsed by them. Decision support only – it does not replace clinical judgement.</p>
+</div>`;
+
+function qrApply(risk, allowFill){
+  const el = $('qrisk');
+  const put = v => { QR.setting = true; el.value = v; el.dispatchEvent(new Event('input', {bubbles:true})); QR.setting = false; };
+  if (risk == null){
+    if (QR.auto && el.value !== ''){ put(''); }
+    QR.auto = false;
+    return;
+  }
+  const s = String(risk);
+  if (allowFill && (el.value === '' || QR.auto)){
+    if (el.value !== s) put(s);
+    QR.auto = true;
+  }
+}
+
+function qrUpdate(allowFill){
+  const q = qrRead();
+  $('q_edWrap').classList.toggle('hidden', !q.male);
+
+  // what is being taken from the main form
+  const using = [];
+  using.push(q.age != null ? `age ${q.age}` : '<b>age needed</b>');
+  using.push(q.sex ? (q.male ? 'male' : 'female') : '<b>sex needed</b>');
+  using.push(q.sbp != null ? `clinic systolic ${q.sbp}` : '<b>clinic systolic BP needed</b>');
+  using.push(q.t1 ? 'type 1 diabetes' : q.t2 ? 'type 2 diabetes' : 'no diabetes');
+  $('qrUsing').innerHTML = 'From the form above: ' + using.join(' · ');
+
+  const res = $('qrRes');
+  const missing = [];
+  if (q.age == null) missing.push('age');
+  if (!q.sex) missing.push('sex');
+  if (q.sbp == null) missing.push('clinic systolic BP');
+  if (q.eth == null) missing.push('ethnicity');
+  if (q.smoke == null) missing.push('smoking status');
+  if (q.ratio == null) missing.push('cholesterol : HDL ratio');
+  if (q.bmi == null) missing.push('BMI (or height and weight)');
+
+  const show = html => { if (QR.last !== html){ QR.last = html; res.innerHTML = html; } };
+  const stop = (html) => { show(html); qrApply(null, allowFill); };
+
+  if (q.cvd) return stop(`<div class="card blue"><h3>QRISK3 not applicable</h3><p>Established CVD is ticked. QRISK3 is a primary-prevention tool – people with established CVD are managed under secondary prevention (NICE NG238).</p></div>`);
+  if (q.t1 && q.t2) return stop(`<div class="card red"><h3>Check diabetes entry</h3><p>Both type 1 and type 2 diabetes are ticked – untick one.</p></div>`);
+  if (q.age != null && (q.age < 25 || q.age > 84)){
+    const why = q.age < 25 ? 'QRISK3 is validated from age 25.' : 'QRISK3 is validated up to age 84. NICE: people aged 85 and over are at increased risk because of age alone – consider atorvastatin 20 mg (NG238).';
+    return stop(`<div class="card blue"><h3>QRISK3 not applicable at age ${q.age}</h3><p>${why}</p></div>`);
+  }
+  if (missing.length){
+    const started = q.eth != null || q.smoke != null || q.ratio != null || q.bmi != null;
+    return stop(started ? `<p class="qr-need">Still needed to calculate: ${missing.join(', ')}.</p>` : '');
+  }
+  const bad = QR_HARD.filter(([k,lo,hi]) => q[k] != null && (q[k] < lo || q[k] > hi));
+  if (bad.length) return stop(`<div class="card red"><h3>Check these values</h3><p>${bad.map(b => b[3]).join(', ')} looks implausible – please re-check.</p></div>`);
+
+  const raw = qrScore(q);
+  if (!isFinite(raw)) return stop(`<div class="card red"><h3>Could not calculate</h3><p>Please re-check the values entered.</p></div>`);
+  const risk = Math.round(raw * 10) / 10;
+  const high = risk >= 10;
+
+  const notes = [];
+  const unusual = QR_SOFT.filter(([k,lo,hi]) => q[k] != null && (q[k] < lo || q[k] > hi));
+  if (unusual.length) notes.push(`Unusual value${unusual.length>1?'s':''}: ${unusual.map(b => b[3]).join(', ')}. Double-check, and interpret the result with caution.`);
+  if (q.t1 || q.renal) notes.push('NICE NG238 advises against relying on a risk score for type 1 diabetes, CKD with eGFR below 60 and/or albuminuria, or familial hypercholesterolaemia – follow their own statin pathways. Shown for information only.');
+  notes.push('May underestimate risk in people with HIV, on immunosuppressants or other medicines that affect lipids, recent ex-smokers, or with systemic inflammatory/autoimmune conditions.');
+
+  const assumed = [];
+  if (q.sd == null) assumed.push('SBP variability: average');
+  if (q.town == null) assumed.push('Townsend score: 0');
+  const per100 = risk < 1 ? 'Fewer than 1' : 'About ' + Math.round(risk);
+
+  const manual = $('qrisk').value !== '' && !QR.auto && num('qrisk') !== risk;
+  const useBtn = manual ? `<p><button class="btn ghost" type="button" id="qrUse" data-v="${risk}">Use ${risk}% in the QRISK3 box</button> <span class="sub">(the box currently holds ${num('qrisk')}%)</span></p>` : '';
+
+  show(`<div class="card ${high ? 'amber' : 'green'}">
+    <h3>QRISK3 10-year CVD risk</h3>
+    <div class="qr-big">${risk.toFixed(1)}%</div>
+    <p>${per100} in 100 people with these characteristics would be expected to have a heart attack or stroke in the next 10 years.</p>
+    <p>${high
+      ? '<b>10% or higher:</b> offer atorvastatin 20 mg for primary prevention (NICE NG238); with stage 1 hypertension, discuss antihypertensive treatment (NG136).'
+      : '<b>Below 10%:</b> lifestyle advice and reassess later; consider QRISK3-lifetime to inform the discussion (NG238). Under 60 with stage 1 hypertension, still consider BP treatment (NG136).'}</p>
+    ${useBtn}
+    <ul class="qr-warn">${notes.map(n => `<li>${n}</li>`).join('')}</ul>
+    ${assumed.length ? `<p class="qr-assume">Assumed (not entered): ${assumed.join('; ')}.</p>` : ''}
+    ${QR_DISCLAIMER}
+  </div>`);
+  qrApply(risk, allowFill);
+}
+
+function qrBmiFromHW(){
+  const h = num('q_h'), w = num('q_w');
+  if (h != null && w != null && h >= 100 && h <= 250 && w > 0) $('q_bmi').value = (w / ((h/100) * (h/100))).toFixed(1);
+}
+
+function qrOnEvent(e){
+  if (QR.setting) return;
+  const t = e.target, id = t && t.id;
+  if (id === 'qrisk'){ QR.auto = false; qrUpdate(false); return; }
+  if (id === 'q_renal') QR.renalTouched = true;
+  if (id === 'q_tx') QR.txTouched = true;
+  if (id === 'q_h' || id === 'q_w') qrBmiFromHW();
+  if (id === 'ckd' && !QR.renalTouched) $('q_renal').checked = $('ckd').checked;
+  if (t && t.name === 'mode' && !QR.txTouched) $('q_tx').checked = (t.value === 'tx');
+  qrUpdate(true);
+}
+$('inputs').addEventListener('input', qrOnEvent);
+$('inputs').addEventListener('change', qrOnEvent);
+$('qrRes').addEventListener('click', e => {
+  const b = e.target.closest('#qrUse'); if (!b) return;
+  QR.setting = true; $('qrisk').value = b.dataset.v; $('qrisk').dispatchEvent(new Event('input', {bubbles:true})); QR.setting = false;
+  QR.auto = true; qrUpdate(false);
+});
+$('resetBtn').addEventListener('click', () => { QR.renalTouched = false; QR.txTouched = false; QR.auto = false; qrUpdate(false); });
+qrUpdate(false);
 
 
 // ---------- antihypertensive drug reference ----------
